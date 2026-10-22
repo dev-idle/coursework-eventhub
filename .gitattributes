@@ -1,0 +1,12 @@
+# Keep LF in the working tree for both apps, even where core.autocrlf is
+# enabled. Android Studio and Visual Studio both read LF files.
+* text=auto eol=lf
+
+# Windows batch files need CRLF to run correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.jar binary
+*.png binary
+*.ttf binary
+*.webp binary
