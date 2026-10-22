@@ -1,0 +1,3 @@
+# Machine-specific IDE state. Gradle and the .csproj fully describe each build.
+.idea/
+.vs/
