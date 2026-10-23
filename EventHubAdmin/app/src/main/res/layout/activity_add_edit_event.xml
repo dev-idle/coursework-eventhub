@@ -248,12 +248,12 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/save_button"
+                android:id="@+id/continue_button"
                 style="@style/Widget.EventHubAdmin.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_large"
-                android:text="@string/button_save_event" />
+                android:text="@string/button_continue" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

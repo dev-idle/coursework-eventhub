@@ -124,6 +124,15 @@
         <item name="shapeAppearance">?attr/shapeAppearanceCornerLarge</item>
     </style>
 
+    <!-- The same size and shape, for the less important of two buttons side by side. -->
+    <style name="Widget.EventHubAdmin.OutlinedButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="shapeAppearance">?attr/shapeAppearanceCornerLarge</item>
+    </style>
+
     <style name="Widget.EventHubAdmin.MonthHeading" parent="">
         <item name="android:accessibilityHeading">true</item>
         <item name="android:letterSpacing">0.1</item>

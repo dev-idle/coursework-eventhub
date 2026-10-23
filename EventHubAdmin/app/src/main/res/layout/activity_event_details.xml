@@ -13,8 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:navigationContentDescription="@string/description_navigate_up"
-        app:navigationIcon="?attr/homeAsUpIndicator"
-        app:title="@string/title_event_details" />
+        app:navigationIcon="?attr/homeAsUpIndicator" />
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
@@ -443,4 +442,33 @@
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Shown instead of the menu while an unsaved event is reviewed. -->
+    <LinearLayout
+        android:id="@+id/review_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:padding="@dimen/screen_padding"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <Button
+            android:id="@+id/edit_button"
+            style="@style/Widget.EventHubAdmin.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/button_edit" />
+
+        <Button
+            android:id="@+id/confirm_button"
+            style="@style/Widget.EventHubAdmin.Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_small"
+            android:layout_weight="1"
+            android:text="@string/button_save_event" />
+    </LinearLayout>
 </LinearLayout>

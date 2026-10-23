@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +15,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.ListPopupWindow;
@@ -30,14 +32,18 @@ import com.google.android.material.snackbar.Snackbar;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.List;
 
 /**
- * Shows one saved event in full, with a menu to edit or delete it.
+ * Shows an event in full: a saved one with a menu to edit or delete it, or an unsaved one to
+ * review before it is saved.
  */
 public class EventDetailsActivity extends AppCompatActivity {
 
     /** Extra with the ID of the event to show. */
     public static final String EXTRA_EVENT_ID = "event_id";
+    /** Extra with an unsaved event to review, returned with RESULT_OK once the user confirms. */
+    public static final String EXTRA_REVIEW_EVENT = "review_event";
     /** Result extra holding the deleted event, so MainActivity can save it again. */
     public static final String EXTRA_EVENT = "event";
     /** Result code when the event was deleted. */
@@ -65,9 +71,15 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView contactEmailText;
     private View contactPhoneRow;
     private TextView contactPhoneText;
+    private View reviewBar;
+    private Button editButton;
+    private Button confirmButton;
 
     private EventDatabase database;
     private long eventId;
+    // Null unless an unsaved event is being reviewed.
+    @Nullable
+    private Event reviewEvent;
     private Event event;
     private AlertDialog deleteDialog;
     private ListPopupWindow moreMenu;
@@ -99,7 +111,12 @@ public class EventDetailsActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         database = new EventDatabase(this);
         eventId = getIntent().getLongExtra(EXTRA_EVENT_ID, Event.NO_ID);
-        enableContactRows();
+        reviewEvent = getIntent().getSerializableExtra(EXTRA_REVIEW_EVENT, Event.class);
+        if (reviewEvent != null) {
+            showReviewBar(reviewEvent.getId() == Event.NO_ID);
+        } else {
+            enableContactRows();
+        }
     }
 
     @Override
@@ -137,6 +154,10 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // An unsaved event has nothing to edit or delete yet.
+        if (reviewEvent != null) {
+            return false;
+        }
         getMenuInflater().inflate(R.menu.menu_more, menu);
         MenuItem more = menu.findItem(R.id.action_more);
         // A button set as an action view does not call onOptionsItemSelected by itself.
@@ -178,9 +199,24 @@ public class EventDetailsActivity extends AppCompatActivity {
         contactEmailText = findViewById(R.id.event_contact_email);
         contactPhoneRow = findViewById(R.id.contact_phone_row);
         contactPhoneText = findViewById(R.id.event_contact_phone);
+        reviewBar = findViewById(R.id.review_bar);
+        editButton = findViewById(R.id.edit_button);
+        confirmButton = findViewById(R.id.confirm_button);
     }
 
-    /** Lets the contact rows open an email or the dialer, colored as links. */
+    /** Shows Edit, which goes back to the form, and a button that confirms the event. */
+    private void showReviewBar(boolean adding) {
+        setTitle(adding ? R.string.title_review_event : R.string.title_review_changes);
+        confirmButton.setText(adding ? R.string.button_save_event : R.string.button_save_changes);
+        reviewBar.setVisibility(View.VISIBLE);
+        editButton.setOnClickListener(v -> finish());
+        confirmButton.setOnClickListener(v -> {
+            setResult(RESULT_OK, new Intent().putExtra(EXTRA_REVIEW_EVENT, reviewEvent));
+            finish();
+        });
+    }
+
+    /** Lets the contact rows of a saved event open an email or the dialer, colored as links. */
     private void enableContactRows() {
         int linkColor = MaterialColors.getColor(contactEmailText,
                 androidx.appcompat.R.attr.colorPrimary);
@@ -229,18 +265,28 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .show();
     }
 
-    /** Shows the saved event as its card would, with the same status text and colors. */
+    /** Shows the event as its card would, with the same status text and colors. */
     private void showEvent() {
-        // The same steps and time as the list, so the status matches the card.
         LocalDateTime now = LocalDateTime.now();
-        database.completeEndedEvents(now);
-        event = database.getEvent(eventId);
-        if (event == null) {
-            finish();
-            return;
+        List<Event> events;
+        if (reviewEvent != null) {
+            // Placed among the saved events, as it will be once saved.
+            event = reviewEvent;
+            events = database.getAllEvents();
+            events.removeIf(saved -> saved.getId() == event.getId());
+            events.add(event);
+        } else {
+            // The same steps and time as the list, so the status matches the card.
+            database.completeEndedEvents(now);
+            event = database.getEvent(eventId);
+            if (event == null) {
+                finish();
+                return;
+            }
+            events = database.getAllEvents();
         }
         EventCardState state = EventCardState.at(
-                event, now, EventCardState.nextStart(database.getAllEvents(), now));
+                event, now, EventCardState.nextStart(events, now));
         EventType type = event.getType();
         nameText.setText(event.getName());
         typeLabel.setText(type.getLabelRes());

@@ -88,6 +88,8 @@
     <string name="title_add_event">Add event</string>
     <string name="title_edit_event">Edit event</string>
     <string name="title_event_details">Event details</string>
+    <string name="title_review_event">Review event</string>
+    <string name="title_review_changes">Review changes</string>
     <string name="description_starts_ends">Starts at %1$s on %2$s, ends at %3$s on %4$s, %5$s</string>
     <string name="menu_more">More options</string>
     <string name="menu_edit">Edit event</string>
@@ -108,6 +110,8 @@
     <string name="helper_optional">Optional</string>
     <string name="description_choose_date">Choose a date</string>
     <string name="description_navigate_up">Navigate up</string>
+    <string name="button_continue">Continue</string>
+    <string name="button_edit">Edit</string>
     <string name="button_save_event">Save event</string>
     <string name="button_save_changes">Save changes</string>
     <!-- Accessibility actions on the contact rows of the details screen -->

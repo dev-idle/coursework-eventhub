@@ -10,6 +10,9 @@ import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -30,7 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The form for adding or editing an event, which it saves before returning its ID.
+ * The form for adding or editing an event, saved once the user confirms it on a review screen.
  */
 public class AddEditEventActivity extends AppCompatActivity {
 
@@ -74,7 +77,7 @@ public class AddEditEventActivity extends AppCompatActivity {
     private EditText contactPhoneInput;
     private DropdownField typeInput;
     private DropdownField statusInput;
-    private Button saveButton;
+    private Button continueButton;
 
     private EventDatabase database;
     @Nullable
@@ -85,6 +88,11 @@ public class AddEditEventActivity extends AppCompatActivity {
     // What each field showed when the form opened, to tell whether anything changed.
     private String[] originalTexts;
     private AlertDialog discardDialog;
+    // Set while the review screen opens, so a quick second tap does not open it twice.
+    private boolean opening;
+
+    private final ActivityResultLauncher<Intent> reviewLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), this::saveReviewedEvent);
 
     // Enabled only once a field changes, so an unchanged form keeps the system back animation.
     private final OnBackPressedCallback discardCallback = new OnBackPressedCallback(false) {
@@ -117,7 +125,6 @@ public class AddEditEventActivity extends AppCompatActivity {
         eventToEdit = getIntent().getSerializableExtra(EXTRA_EVENT, Event.class);
         if (eventToEdit != null) {
             setTitle(R.string.title_edit_event);
-            saveButton.setText(R.string.button_save_changes);
             if (savedInstanceState == null) {
                 fillForm(eventToEdit);
             }
@@ -130,7 +137,13 @@ public class AddEditEventActivity extends AppCompatActivity {
         getSupportFragmentManager().setFragmentResultListener(DatePickerFragment.REQUEST_KEY,
                 this, (key, result) -> setTextAtEnd(dateInput, EventDates.format(
                         result.getSerializable(DatePickerFragment.RESULT_DATE, LocalDate.class))));
-        saveButton.setOnClickListener(v -> save());
+        continueButton.setOnClickListener(v -> review());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        opening = false;
     }
 
     @Override
@@ -213,7 +226,7 @@ public class AddEditEventActivity extends AppCompatActivity {
         contactPhoneInput = findViewById(R.id.contact_phone_input);
         typeInput = findViewById(R.id.type_input);
         statusInput = findViewById(R.id.status_input);
-        saveButton = findViewById(R.id.save_button);
+        continueButton = findViewById(R.id.continue_button);
     }
 
     /** Returns every field in the order of the form, so focus goes to the first error. */
@@ -333,7 +346,11 @@ public class AddEditEventActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void save() {
+    /** Checks every field, then opens the event on the review screen if all are valid. */
+    private void review() {
+        if (opening) {
+            return;
+        }
         EventValidator.Result<String> name = EventValidator.validateText(textOf(nameInput));
         EventValidator.Result<LocalDate> date = EventValidator.validateDate(textOf(dateInput));
         EventValidator.Result<LocalTime> startTime =
@@ -391,6 +408,21 @@ public class AddEditEventActivity extends AppCompatActivity {
             finish();
             return;
         }
+        opening = true;
+        reviewLauncher.launch(new Intent(AddEditEventActivity.this, EventDetailsActivity.class)
+                .putExtra(EventDetailsActivity.EXTRA_REVIEW_EVENT, event));
+    }
+
+    /** Saves the event once the user confirms it; Edit on the review screen comes back here. */
+    private void saveReviewedEvent(ActivityResult result) {
+        Intent data = result.getData();
+        if (result.getResultCode() != RESULT_OK || data == null) {
+            return;
+        }
+        // The event comes back with the result, so it survives the form being recreated.
+        Event event = data.getSerializableExtra(EventDetailsActivity.EXTRA_REVIEW_EVENT,
+                Event.class);
+        long id = event.getId();
         if (id == Event.NO_ID) {
             id = database.insertEvent(event);
         } else {
