@@ -20,9 +20,10 @@ import java.util.List;
 public class EventDatabase extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "events.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Dates are stored as YYYY-MM-DD and times as HH:MM, so text order is time order.
+    // The optional details are empty strings when not given.
     private static final String CREATE_TABLE = "CREATE TABLE Event ("
             + "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
             + "Name TEXT NOT NULL, "
@@ -32,19 +33,23 @@ public class EventDatabase extends SQLiteOpenHelper {
             + "Location TEXT NOT NULL, "
             + "Organizer TEXT NOT NULL, "
             + "Type TEXT NOT NULL, "
-            + "Status TEXT NOT NULL)";
-    private static final String INSERT = "INSERT INTO Event "
-            + "(Name, Date, StartTime, EndTime, Location, Organizer, Type, Status) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            + "Status TEXT NOT NULL, "
+            + "Description TEXT NOT NULL, "
+            + "ContactEmail TEXT NOT NULL, "
+            + "ContactPhone TEXT NOT NULL)";
+    private static final String INSERT = "INSERT INTO Event (Name, Date, StartTime, EndTime, "
+            + "Location, Organizer, Type, Status, Description, ContactEmail, ContactPhone) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String UPDATE = "UPDATE Event SET Name = ?, Date = ?, StartTime = ?, "
-            + "EndTime = ?, Location = ?, Organizer = ?, Type = ?, Status = ? WHERE ID = ?";
+            + "EndTime = ?, Location = ?, Organizer = ?, Type = ?, Status = ?, Description = ?, "
+            + "ContactEmail = ?, ContactPhone = ? WHERE ID = ?";
     // The ID comes last, as in UPDATE, so the details bind the same way.
-    private static final String RESTORE = "INSERT INTO Event "
-            + "(Name, Date, StartTime, EndTime, Location, Organizer, Type, Status, ID) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String RESTORE = "INSERT INTO Event (Name, Date, StartTime, EndTime, "
+            + "Location, Organizer, Type, Status, Description, ContactEmail, ContactPhone, ID) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE = "DELETE FROM Event WHERE ID = ?";
-    private static final String SELECT = "SELECT ID, Name, Date, StartTime, EndTime, "
-            + "Location, Organizer, Type, Status FROM Event ";
+    private static final String SELECT = "SELECT ID, Name, Date, StartTime, EndTime, Location, "
+            + "Organizer, Type, Status, Description, ContactEmail, ContactPhone FROM Event ";
     private static final String START_ORDER = "ORDER BY Date, StartTime, ID";
     private static final String SELECT_ALL = SELECT + START_ORDER;
     private static final String SELECT_BY_STATUS = SELECT + "WHERE Status = ? " + START_ORDER;
@@ -69,6 +74,12 @@ public class EventDatabase extends SQLiteOpenHelper {
             // Version 2 adds the status, and events saved before it count as upcoming.
             db.execSQL("ALTER TABLE Event ADD COLUMN Status TEXT NOT NULL DEFAULT 'UPCOMING'");
         }
+        if (oldVersion < 3) {
+            // Version 3 adds the optional details, which events saved before it leave empty.
+            db.execSQL("ALTER TABLE Event ADD COLUMN Description TEXT NOT NULL DEFAULT ''");
+            db.execSQL("ALTER TABLE Event ADD COLUMN ContactEmail TEXT NOT NULL DEFAULT ''");
+            db.execSQL("ALTER TABLE Event ADD COLUMN ContactPhone TEXT NOT NULL DEFAULT ''");
+        }
     }
 
     /** Saves a new event and returns its ID. */
@@ -83,7 +94,7 @@ public class EventDatabase extends SQLiteOpenHelper {
     public void updateEvent(Event event) {
         try (SQLiteStatement statement = getWritableDatabase().compileStatement(UPDATE)) {
             bindDetails(statement, event);
-            statement.bindLong(9, event.getId());
+            statement.bindLong(12, event.getId());
             statement.executeUpdateDelete();
         }
     }
@@ -118,7 +129,7 @@ public class EventDatabase extends SQLiteOpenHelper {
         try (SQLiteStatement statement = db.compileStatement(RESTORE)) {
             for (Event event : events) {
                 bindDetails(statement, event);
-                statement.bindLong(9, event.getId());
+                statement.bindLong(12, event.getId());
                 statement.executeInsert();
             }
             db.setTransactionSuccessful();
@@ -176,10 +187,11 @@ public class EventDatabase extends SQLiteOpenHelper {
         return new Event(cursor.getLong(0), cursor.getString(1),
                 LocalDate.parse(cursor.getString(2)), EventTimes.parse(cursor.getString(3)),
                 EventTimes.parse(cursor.getString(4)), cursor.getString(5), cursor.getString(6),
-                EventType.valueOf(cursor.getString(7)), EventStatus.valueOf(cursor.getString(8)));
+                EventType.valueOf(cursor.getString(7)), EventStatus.valueOf(cursor.getString(8)),
+                cursor.getString(9), cursor.getString(10), cursor.getString(11));
     }
 
-    /** Binds the event's details to parameters 1 to 8, in the order of the Event columns. */
+    /** Binds the event's details to parameters 1 to 11, in the order of the Event columns. */
     private static void bindDetails(SQLiteStatement statement, Event event) {
         statement.bindString(1, event.getName());
         statement.bindString(2, event.getDate().toString());
@@ -189,5 +201,8 @@ public class EventDatabase extends SQLiteOpenHelper {
         statement.bindString(6, event.getOrganizer());
         statement.bindString(7, event.getType().name());
         statement.bindString(8, event.getStatus().name());
+        statement.bindString(9, event.getDescription());
+        statement.bindString(10, event.getContactEmail());
+        statement.bindString(11, event.getContactPhone());
     }
 }

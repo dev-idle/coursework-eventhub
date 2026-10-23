@@ -69,6 +69,20 @@
                 app:barrierDirection="bottom"
                 app:constraint_referenced_ids="type_label,event_status" />
 
+            <!-- Hidden when the event has no description. -->
+            <TextView
+                android:id="@+id/event_description"
+                style="@style/Widget.EventHubAdmin.DetailValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_medium"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/labels_bottom"
+                tools:text="Talks and codelabs on the latest Android tools."
+                tools:visibility="visible" />
+
             <com.google.android.material.divider.MaterialDivider
                 android:id="@+id/time_divider"
                 android:layout_width="0dp"
@@ -76,7 +90,7 @@
                 android:layout_marginTop="@dimen/screen_padding"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/labels_bottom" />
+                app:layout_constraintTop_toBottomOf="@id/event_description" />
 
             <!-- The date, then a timeline from start to end, read out as one sentence. -->
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -338,6 +352,93 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         tools:text="Google UK" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- The contact rows are hidden when empty; tapping one sends an email or calls. -->
+            <LinearLayout
+                android:id="@+id/contact_email_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_padding"
+                android:background="?attr/selectableItemBackground"
+                android:screenReaderFocusable="true"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/organizer_row"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="@dimen/detail_icon_size"
+                    android:layout_height="@dimen/detail_icon_size"
+                    android:layout_marginTop="@dimen/space_small"
+                    android:layout_marginEnd="@dimen/detail_icon_margin"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_email"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.EventHubAdmin.DetailLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_contact_email" />
+
+                    <TextView
+                        android:id="@+id/event_contact_email"
+                        style="@style/Widget.EventHubAdmin.DetailValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="events@example.com" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/contact_phone_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_padding"
+                android:background="?attr/selectableItemBackground"
+                android:screenReaderFocusable="true"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/contact_email_row"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="@dimen/detail_icon_size"
+                    android:layout_height="@dimen/detail_icon_size"
+                    android:layout_marginTop="@dimen/space_small"
+                    android:layout_marginEnd="@dimen/detail_icon_margin"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_phone"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.EventHubAdmin.DetailLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_contact_phone" />
+
+                    <TextView
+                        android:id="@+id/event_contact_phone"
+                        style="@style/Widget.EventHubAdmin.DetailValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="020 7946 0958" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>

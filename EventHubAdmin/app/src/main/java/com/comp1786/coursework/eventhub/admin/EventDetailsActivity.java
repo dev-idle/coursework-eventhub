@@ -1,11 +1,14 @@
 package com.comp1786.coursework.eventhub.admin;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,6 +20,7 @@ import androidx.appcompat.widget.ListPopupWindow;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.color.MaterialColors;
@@ -45,6 +49,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView nameText;
     private TextView typeLabel;
     private TextView statusText;
+    private TextView descriptionText;
     private View timeBlock;
     private TextView dayText;
     private TextView dayOfWeekText;
@@ -56,6 +61,10 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView endDateText;
     private TextView locationText;
     private TextView organizerText;
+    private View contactEmailRow;
+    private TextView contactEmailText;
+    private View contactPhoneRow;
+    private TextView contactPhoneText;
 
     private EventDatabase database;
     private long eventId;
@@ -90,6 +99,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         database = new EventDatabase(this);
         eventId = getIntent().getLongExtra(EXTRA_EVENT_ID, Event.NO_ID);
+        enableContactRows();
     }
 
     @Override
@@ -152,6 +162,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         nameText = findViewById(R.id.event_name);
         typeLabel = findViewById(R.id.type_label);
         statusText = findViewById(R.id.event_status);
+        descriptionText = findViewById(R.id.event_description);
         timeBlock = findViewById(R.id.time_block);
         dayText = findViewById(R.id.event_day);
         dayOfWeekText = findViewById(R.id.event_day_of_week);
@@ -163,6 +174,37 @@ public class EventDetailsActivity extends AppCompatActivity {
         endDateText = findViewById(R.id.end_date);
         locationText = findViewById(R.id.event_location);
         organizerText = findViewById(R.id.event_organizer);
+        contactEmailRow = findViewById(R.id.contact_email_row);
+        contactEmailText = findViewById(R.id.event_contact_email);
+        contactPhoneRow = findViewById(R.id.contact_phone_row);
+        contactPhoneText = findViewById(R.id.event_contact_phone);
+    }
+
+    /** Lets the contact rows open an email or the dialer, colored as links. */
+    private void enableContactRows() {
+        int linkColor = MaterialColors.getColor(contactEmailText,
+                androidx.appcompat.R.attr.colorPrimary);
+        contactEmailText.setTextColor(linkColor);
+        contactPhoneText.setTextColor(linkColor);
+        contactEmailRow.setOnClickListener(v -> openContact(new Intent(Intent.ACTION_SENDTO,
+                Uri.fromParts("mailto", event.getContactEmail(), null))));
+        contactPhoneRow.setOnClickListener(v -> openContact(new Intent(Intent.ACTION_DIAL,
+                Uri.fromParts("tel", event.getContactPhone(), null))));
+        // TalkBack says "Double-tap to send email" rather than "to activate".
+        ViewCompat.replaceAccessibilityAction(contactEmailRow,
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                getString(R.string.action_send_email), null);
+        ViewCompat.replaceAccessibilityAction(contactPhoneRow,
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                getString(R.string.action_call), null);
+    }
+
+    private void openContact(Intent intent) {
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, R.string.error_no_app, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void openEditEvent() {
@@ -203,10 +245,19 @@ public class EventDetailsActivity extends AppCompatActivity {
         nameText.setText(event.getName());
         typeLabel.setText(type.getLabelRes());
         state.showStatus(statusText, event, state.daysAway(event, now.toLocalDate()));
+        showOptional(descriptionText, descriptionText, event.getDescription());
         showTimes(state);
         locationText.setText(event.getLocation());
         organizerText.setText(event.getOrganizer());
+        showOptional(contactEmailRow, contactEmailText, event.getContactEmail());
+        showOptional(contactPhoneRow, contactPhoneText, event.getContactPhone());
         state.showCancelled(nameText, typeLabel, type, startTimeText, endTimeText);
+    }
+
+    /** Shows an optional detail, or hides its row when it was left empty. */
+    private static void showOptional(View row, TextView valueText, String value) {
+        valueText.setText(value);
+        row.setVisibility(value.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     /** Shows the date and a timeline from start to end, with the end date if it is the next day. */

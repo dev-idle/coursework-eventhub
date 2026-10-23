@@ -93,19 +93,27 @@
     <string name="menu_edit">Edit event</string>
     <string name="menu_delete">Delete event</string>
     <string name="label_name">Event name</string>
+    <string name="label_description">Event description</string>
     <string name="label_date">Event date</string>
     <string name="label_start_time">Start time</string>
     <string name="label_end_time">End time</string>
     <string name="end_time_next_day">Next day (%1$s)</string>
     <string name="label_location">Event location</string>
     <string name="label_organizer">Event organizer</string>
+    <string name="label_contact_email">Contact email</string>
+    <string name="label_contact_phone">Contact phone</string>
     <string name="label_type">Event type</string>
     <string name="label_status">Event status</string>
     <string name="helper_date_format" translatable="false">DD/MM/YYYY</string>
+    <string name="helper_optional">Optional</string>
     <string name="description_choose_date">Choose a date</string>
     <string name="description_navigate_up">Navigate up</string>
     <string name="button_save_event">Save event</string>
     <string name="button_save_changes">Save changes</string>
+    <!-- Accessibility actions on the contact rows of the details screen -->
+    <string name="action_send_email">Send email</string>
+    <string name="action_call">Call</string>
+    <string name="error_no_app">No app on this device can do this</string>
 
     <string name="discard_title">Discard this event?</string>
     <string name="discard_message">The details you entered will be lost.</string>
@@ -131,6 +139,8 @@
     <string name="error_end_time_same">End time must be different from the start time</string>
     <string name="error_location_required">Enter the event location</string>
     <string name="error_organizer_required">Enter the event organizer</string>
+    <string name="error_email_format">Enter an email address like name@example.com</string>
+    <string name="error_phone_format">Enter a phone number with 7 to 15 digits, like 020 7946 0958</string>
     <string name="error_type_required">Select the event type</string>
     <string name="error_status_not_ended">Select Upcoming or Cancelled, as the event has not ended</string>
     <string name="error_status_ended">Select Completed or Cancelled, as the event has ended</string>
@@ -149,4 +159,6 @@
 
     <!-- Characters accepted while typing a date -->
     <string name="digits_date" translatable="false">0123456789/</string>
+    <!-- Quoted so the trailing space is kept -->
+    <string name="digits_phone" translatable="false">"0123456789+-() "</string>
 </resources>

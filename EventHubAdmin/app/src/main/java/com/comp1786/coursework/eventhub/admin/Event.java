@@ -25,9 +25,14 @@ public final class Event implements Serializable {
     private final String organizer;
     private final EventType type;
     private final EventStatus status;
+    // Optional details, empty when not given.
+    private final String description;
+    private final String contactEmail;
+    private final String contactPhone;
 
     public Event(long id, String name, LocalDate date, LocalTime startTime, LocalTime endTime,
-            String location, String organizer, EventType type, EventStatus status) {
+            String location, String organizer, EventType type, EventStatus status,
+            String description, String contactEmail, String contactPhone) {
         this.id = id;
         this.name = name;
         this.date = date;
@@ -37,6 +42,9 @@ public final class Event implements Serializable {
         this.organizer = organizer;
         this.type = type;
         this.status = status;
+        this.description = description;
+        this.contactEmail = contactEmail;
+        this.contactPhone = contactPhone;
     }
 
     public long getId() {
@@ -89,6 +97,18 @@ public final class Event implements Serializable {
         return status;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public String getContactEmail() {
+        return contactEmail;
+    }
+
+    public String getContactPhone() {
+        return contactPhone;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -101,11 +121,15 @@ public final class Event implements Serializable {
         return id == other.id && name.equals(other.name) && date.equals(other.date)
                 && startTime.equals(other.startTime) && endTime.equals(other.endTime)
                 && location.equals(other.location) && organizer.equals(other.organizer)
-                && type == other.type && status == other.status;
+                && type == other.type && status == other.status
+                && description.equals(other.description)
+                && contactEmail.equals(other.contactEmail)
+                && contactPhone.equals(other.contactPhone);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, date, startTime, endTime, location, organizer, type, status);
+        return Objects.hash(id, name, date, startTime, endTime, location, organizer, type, status,
+                description, contactEmail, contactPhone);
     }
 }

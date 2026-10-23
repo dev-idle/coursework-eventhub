@@ -53,19 +53,25 @@ public class AddEditEventActivity extends AppCompatActivity {
 
     private MaterialToolbar toolbar;
     private TextInputLayout nameLayout;
+    private TextInputLayout descriptionLayout;
     private TextInputLayout dateLayout;
     private TextInputLayout startTimeLayout;
     private TextInputLayout endTimeLayout;
     private TextInputLayout locationLayout;
     private TextInputLayout organizerLayout;
+    private TextInputLayout contactEmailLayout;
+    private TextInputLayout contactPhoneLayout;
     private TextInputLayout typeLayout;
     private TextInputLayout statusLayout;
     private EditText nameInput;
+    private EditText descriptionInput;
     private EditText dateInput;
     private DropdownField startTimeInput;
     private DropdownField endTimeInput;
     private EditText locationInput;
     private EditText organizerInput;
+    private EditText contactEmailInput;
+    private EditText contactPhoneInput;
     private DropdownField typeInput;
     private DropdownField statusInput;
     private Button saveButton;
@@ -186,27 +192,35 @@ public class AddEditEventActivity extends AppCompatActivity {
     private void bindViews() {
         toolbar = findViewById(R.id.toolbar);
         nameLayout = findViewById(R.id.name_layout);
+        descriptionLayout = findViewById(R.id.description_layout);
         dateLayout = findViewById(R.id.date_layout);
         startTimeLayout = findViewById(R.id.start_time_layout);
         endTimeLayout = findViewById(R.id.end_time_layout);
         locationLayout = findViewById(R.id.location_layout);
         organizerLayout = findViewById(R.id.organizer_layout);
+        contactEmailLayout = findViewById(R.id.contact_email_layout);
+        contactPhoneLayout = findViewById(R.id.contact_phone_layout);
         typeLayout = findViewById(R.id.type_layout);
         statusLayout = findViewById(R.id.status_layout);
         nameInput = findViewById(R.id.name_input);
+        descriptionInput = findViewById(R.id.description_input);
         dateInput = findViewById(R.id.date_input);
         startTimeInput = findViewById(R.id.start_time_input);
         endTimeInput = findViewById(R.id.end_time_input);
         locationInput = findViewById(R.id.location_input);
         organizerInput = findViewById(R.id.organizer_input);
+        contactEmailInput = findViewById(R.id.contact_email_input);
+        contactPhoneInput = findViewById(R.id.contact_phone_input);
         typeInput = findViewById(R.id.type_input);
         statusInput = findViewById(R.id.status_input);
         saveButton = findViewById(R.id.save_button);
     }
 
+    /** Returns every field in the order of the form, so focus goes to the first error. */
     private TextInputLayout[] allLayouts() {
-        return new TextInputLayout[] {nameLayout, dateLayout, startTimeLayout, endTimeLayout,
-                locationLayout, organizerLayout, typeLayout, statusLayout};
+        return new TextInputLayout[] {nameLayout, descriptionLayout, dateLayout, startTimeLayout,
+                endTimeLayout, locationLayout, organizerLayout, contactEmailLayout,
+                contactPhoneLayout, typeLayout, statusLayout};
     }
 
     private void buildTypeMenu() {
@@ -266,6 +280,7 @@ public class AddEditEventActivity extends AppCompatActivity {
     /** Fills the form with an event's values, so they can be edited. */
     private void fillForm(Event event) {
         nameInput.setText(event.getName());
+        descriptionInput.setText(event.getDescription());
         dateInput.setText(EventDates.format(event.getDate()));
         selectedStartTime = event.getStartTime();
         startTimeInput.setText(EventTimes.format(selectedStartTime), false);
@@ -273,6 +288,8 @@ public class AddEditEventActivity extends AppCompatActivity {
         endTimeInput.setText(EventTimes.format(event.getEndTime()), false);
         locationInput.setText(event.getLocation());
         organizerInput.setText(event.getOrganizer());
+        contactEmailInput.setText(event.getContactEmail());
+        contactPhoneInput.setText(event.getContactPhone());
         selectedType = event.getType();
         typeInput.setText(getString(selectedType.getLabelRes()), false);
         selectedStatus = event.getStatus();
@@ -327,6 +344,10 @@ public class AddEditEventActivity extends AppCompatActivity {
                 EventValidator.validateText(textOf(locationInput));
         EventValidator.Result<String> organizer =
                 EventValidator.validateText(textOf(organizerInput));
+        EventValidator.Result<String> contactEmail =
+                EventValidator.validateEmail(textOf(contactEmailInput));
+        EventValidator.Result<String> contactPhone =
+                EventValidator.validatePhone(textOf(contactPhoneInput));
         EventValidator.Result<EventType> type = EventValidator.validateType(selectedType);
         LocalDateTime end = date.isValid() && startTime.isValid() && endTime.isValid()
                 ? EventTimes.endOn(date.getValue(), startTime.getValue(), endTime.getValue())
@@ -343,6 +364,10 @@ public class AddEditEventActivity extends AppCompatActivity {
                 location.isValid() ? null : getString(R.string.error_location_required));
         organizerLayout.setError(
                 organizer.isValid() ? null : getString(R.string.error_organizer_required));
+        contactEmailLayout.setError(
+                contactEmail.isValid() ? null : getString(R.string.error_email_format));
+        contactPhoneLayout.setError(
+                contactPhone.isValid() ? null : getString(R.string.error_phone_format));
         typeLayout.setError(type.isValid() ? null : getString(R.string.error_type_required));
         statusLayout.setError(status.isValid() ? null : statusError(status.getReason()));
         long id = eventToEdit == null ? Event.NO_ID : eventToEdit.getId();
@@ -359,7 +384,8 @@ public class AddEditEventActivity extends AppCompatActivity {
         }
         Event event = new Event(id, name.getValue(), date.getValue(), startTime.getValue(),
                 endTime.getValue(), location.getValue(), organizer.getValue(), type.getValue(),
-                status.getValue());
+                status.getValue(), textOf(descriptionInput).trim(), contactEmail.getValue(),
+                contactPhone.getValue());
         if (event.equals(eventToEdit)) {
             // Nothing changed, so there is nothing to save or confirm.
             finish();
