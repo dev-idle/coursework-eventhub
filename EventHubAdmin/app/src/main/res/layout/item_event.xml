@@ -224,4 +224,18 @@
         app:layout_constraintStart_toStartOf="@id/event_name"
         app:layout_constraintTop_toBottomOf="@id/event_location"
         tools:text="Google UK" />
+
+    <!-- Shown on every card, with "No sessions" too, so all cards read the same way. -->
+    <TextView
+        android:id="@+id/event_sessions"
+        style="@style/Widget.EventHubAdmin.CardDetail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_extra_small"
+        android:layout_marginEnd="@dimen/card_padding"
+        app:drawableStartCompat="@drawable/ic_format_list_bulleted"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/event_name"
+        app:layout_constraintTop_toBottomOf="@id/event_organizer"
+        tools:text="3 sessions" />
 </androidx.constraintlayout.widget.ConstraintLayout>

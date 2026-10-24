@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -46,9 +47,10 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         this.listener = listener;
     }
 
-    /** Shows the events, which must be in start order, as they stand at the given time. */
-    public void setEvents(List<Event> events, LocalDateTime now) {
-        List<Row> newRows = buildRows(events, now);
+    /** Shows the events, in start order, with their session counts by ID, as they stand now. */
+    public void setEvents(List<Event> events, Map<Long, Integer> sessionCounts,
+            LocalDateTime now) {
+        List<Row> newRows = buildRows(events, sessionCounts, now);
         DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new RowDiff(rows, newRows));
         rows = newRows;
         // An event that is no longer shown cannot stay selected.
@@ -240,6 +242,10 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         holder.organizerText.setText(event.getOrganizer());
         holder.organizerText.setContentDescription(
                 context.getString(R.string.description_organizer, event.getOrganizer()));
+        holder.sessionsText.setText(row.sessionCount == 0
+                ? context.getString(R.string.no_sessions)
+                : context.getResources().getQuantityString(
+                        R.plurals.session_count, row.sessionCount, row.sessionCount));
         state.showCancelled(holder.nameText, holder.typeLabel, type,
                 holder.startTimeText, holder.endTimeText);
     }
@@ -277,7 +283,8 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     /** Adds month headings and works out the state of each event at the given time. */
-    private static List<Row> buildRows(List<Event> events, LocalDateTime now) {
+    private static List<Row> buildRows(List<Event> events, Map<Long, Integer> sessionCounts,
+            LocalDateTime now) {
         LocalDateTime nextStart = EventCardState.nextStart(events, now);
         List<Row> rows = new ArrayList<>();
         YearMonth month = null;
@@ -285,10 +292,11 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             YearMonth eventMonth = YearMonth.from(event.getDate());
             if (!eventMonth.equals(month)) {
                 month = eventMonth;
-                rows.add(new Row(month, null, null, 0));
+                rows.add(new Row(month, null, null, 0, 0));
             }
             EventCardState state = EventCardState.at(event, now, nextStart);
-            rows.add(new Row(month, event, state, state.daysAway(event, now.toLocalDate())));
+            rows.add(new Row(month, event, state, state.daysAway(event, now.toLocalDate()),
+                    sessionCounts.getOrDefault(event.getId(), 0)));
         }
         return rows;
     }
@@ -302,12 +310,15 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         @Nullable
         private final EventCardState state;
         private final long daysAway;
+        private final int sessionCount;
 
-        Row(YearMonth month, @Nullable Event event, @Nullable EventCardState state, long daysAway) {
+        Row(YearMonth month, @Nullable Event event, @Nullable EventCardState state, long daysAway,
+                int sessionCount) {
             this.month = month;
             this.event = event;
             this.state = state;
             this.daysAway = daysAway;
+            this.sessionCount = sessionCount;
         }
     }
 
@@ -349,6 +360,7 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             Row newRow = newRows.get(newPosition);
             // States and countdowns change as time passes, and details when an event is edited.
             return oldRow.state == newRow.state && oldRow.daysAway == newRow.daysAway
+                    && oldRow.sessionCount == newRow.sessionCount
                     && Objects.equals(oldRow.event, newRow.event);
         }
     }
@@ -389,6 +401,7 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         private final TextView nextDayText;
         private final TextView locationText;
         private final TextView organizerText;
+        private final TextView sessionsText;
         private final View selectionCheck;
 
         EventViewHolder(@NonNull View itemView) {
@@ -413,6 +426,7 @@ public class EventAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             nextDayText = itemView.findViewById(R.id.next_day);
             locationText = itemView.findViewById(R.id.event_location);
             organizerText = itemView.findViewById(R.id.event_organizer);
+            sessionsText = itemView.findViewById(R.id.event_sessions);
             selectionCheck = itemView.findViewById(R.id.selection_check);
         }
     }

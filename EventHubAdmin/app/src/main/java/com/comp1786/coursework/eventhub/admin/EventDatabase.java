@@ -12,7 +12,9 @@ import androidx.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Saves events in SQLite, as the module brief's database helper does.
@@ -82,6 +84,8 @@ public class EventDatabase extends SQLiteOpenHelper {
     private static final String SELECT_SESSIONS = "SELECT ID, EventID, Name, StartTime, "
             + "EndTime, Type, Speaker, Room, Description FROM Session WHERE EventID = ? "
             + "ORDER BY StartTime < ?, StartTime, ID";
+    private static final String COUNT_SESSIONS =
+            "SELECT EventID, COUNT(*) FROM Session GROUP BY EventID";
     // An event ends on the next day when its end time is not after its start time.
     private static final String COMPLETE_ENDED = "UPDATE Event SET Status = ? "
             + "WHERE Status = ? AND (CASE WHEN EndTime > StartTime THEN Date "
@@ -279,6 +283,17 @@ public class EventDatabase extends SQLiteOpenHelper {
             sessions.addAll(getSessions(event));
         }
         return sessions;
+    }
+
+    /** Returns how many sessions each event has, by event ID, without events that have none. */
+    public Map<Long, Integer> getSessionCounts() {
+        Map<Long, Integer> counts = new HashMap<>();
+        try (Cursor cursor = getReadableDatabase().rawQuery(COUNT_SESSIONS, null)) {
+            while (cursor.moveToNext()) {
+                counts.put(cursor.getLong(0), cursor.getInt(1));
+            }
+        }
+        return counts;
     }
 
     /** Returns how many events are saved. */

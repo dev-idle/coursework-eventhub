@@ -445,7 +445,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         }
         List<Event> events = database.getEvents(filter);
         // The same time, so every card shown as ended is also completed.
-        adapter.setEvents(events, now);
+        adapter.setEvents(events, database.getSessionCounts(), now);
         filterBar.setVisibility(nothingSaved ? View.GONE : View.VISIBLE);
         boolean empty = events.isEmpty();
         emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
