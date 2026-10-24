@@ -15,15 +15,19 @@
         app:navigationContentDescription="@string/description_navigate_up"
         app:navigationIcon="?attr/homeAsUpIndicator" />
 
+    <!-- Fills the screen, so the sheet reaches the bottom when the form is short. -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
+            android:id="@+id/sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/card_body"
             android:orientation="vertical"
             android:padding="@dimen/screen_padding">
 

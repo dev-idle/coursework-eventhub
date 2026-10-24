@@ -15,15 +15,20 @@
         app:navigationContentDescription="@string/description_navigate_up"
         app:navigationIcon="?attr/homeAsUpIndicator" />
 
+    <!-- Fills the screen, so the sheet reaches the bottom when the details are short. -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
+        <!-- The content, on a sheet below the bar, as the cards sit below the list header. -->
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/card_body"
             android:padding="@dimen/screen_padding">
 
             <TextView
@@ -506,6 +511,7 @@
         android:id="@+id/review_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/card_body"
         android:baselineAligned="false"
         android:orientation="horizontal"
         android:padding="@dimen/screen_padding"

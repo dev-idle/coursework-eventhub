@@ -73,6 +73,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView contactEmailText;
     private View contactPhoneRow;
     private TextView contactPhoneText;
+    private View sheet;
     private View reviewBar;
     private Button editButton;
     private Button confirmButton;
@@ -108,8 +109,12 @@ public class EventDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_event_details);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
-                    | WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.ime());
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                    | WindowInsetsCompat.Type.displayCutout());
+            // The sheet runs under the navigation bar, and only what ends the screen moves up.
+            v.setPadding(bars.left, bars.top, bars.right, 0);
+            View last = reviewBar.getVisibility() == View.VISIBLE ? reviewBar : sheet;
+            last.setPadding(last.getPaddingLeft(), last.getPaddingTop(), last.getPaddingRight(),
+                    getResources().getDimensionPixelSize(R.dimen.screen_padding) + bars.bottom);
             return insets;
         });
 
@@ -208,6 +213,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         contactEmailText = findViewById(R.id.event_contact_email);
         contactPhoneRow = findViewById(R.id.contact_phone_row);
         contactPhoneText = findViewById(R.id.event_contact_phone);
+        sheet = findViewById(R.id.sheet);
         reviewBar = findViewById(R.id.review_bar);
         editButton = findViewById(R.id.edit_button);
         confirmButton = findViewById(R.id.confirm_button);

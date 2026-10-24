@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -55,6 +56,7 @@ public class AddEditEventActivity extends AppCompatActivity {
     private static final EventStatus DEFAULT_STATUS = EventStatus.UPCOMING;
 
     private MaterialToolbar toolbar;
+    private View sheet;
     private TextInputLayout nameLayout;
     private TextInputLayout descriptionLayout;
     private TextInputLayout dateLayout;
@@ -109,8 +111,13 @@ public class AddEditEventActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_edit_event);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
-                    | WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.ime());
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                    | WindowInsetsCompat.Type.displayCutout());
+            int keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+            // Above the keyboard when it shows, otherwise the sheet runs under the navigation bar.
+            v.setPadding(bars.left, bars.top, bars.right, keyboard);
+            sheet.setPadding(sheet.getPaddingLeft(), sheet.getPaddingTop(),
+                    sheet.getPaddingRight(), getResources().getDimensionPixelSize(
+                            R.dimen.screen_padding) + (keyboard > 0 ? 0 : bars.bottom));
             return insets;
         });
 
@@ -204,6 +211,7 @@ public class AddEditEventActivity extends AppCompatActivity {
 
     private void bindViews() {
         toolbar = findViewById(R.id.toolbar);
+        sheet = findViewById(R.id.sheet);
         nameLayout = findViewById(R.id.name_layout);
         descriptionLayout = findViewById(R.id.description_layout);
         dateLayout = findViewById(R.id.date_layout);

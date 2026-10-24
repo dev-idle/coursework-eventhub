@@ -43,6 +43,8 @@
         <item name="snackbarTextViewStyle">@style/Widget.EventHubAdmin.Snackbar.TextView</item>
         <item name="snackbarButtonStyle">@style/Widget.EventHubAdmin.Snackbar.Button</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.EventHubAdmin.BottomSheetDialog</item>
+        <!-- The header tone, drawn once through the window; each body is a sheet on top. -->
+        <item name="android:windowBackground">@color/list_background</item>
     </style>
 
     <!-- Drawn behind the navigation bar like the screens, rather than above a black strip. -->
@@ -52,8 +54,4 @@
         <item name="enableEdgeToEdge">true</item>
     </style>
 
-    <!-- The list screen draws its background once, through the window. -->
-    <style name="Theme.EventHubAdmin.List">
-        <item name="android:windowBackground">@color/list_background</item>
-    </style>
 </resources>
