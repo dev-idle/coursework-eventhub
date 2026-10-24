@@ -31,7 +31,7 @@
 
             <TextView
                 android:id="@+id/session_start_next_day"
-                style="@style/Widget.EventHubAdmin.SessionNextDay"
+                style="@style/Widget.EventHubAdmin.NextDay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:visibility="visible" />
@@ -50,7 +50,7 @@
 
             <TextView
                 android:id="@+id/session_end_next_day"
-                style="@style/Widget.EventHubAdmin.SessionNextDay"
+                style="@style/Widget.EventHubAdmin.NextDay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:visibility="visible" />
