@@ -20,8 +20,25 @@
         android:strokeColor="#1A1B20"
         android:strokeLineCap="round" />
     <path
-        android:pathData="M51,55H75M51,62H67"
+        android:pathData="M51,55H75M51,62H61"
         android:strokeWidth="3"
         android:strokeColor="#C5C6D0"
         android:strokeLineCap="round" />
+    <!-- An admin badge inside the 66dp safe zone, ringed in the background color -->
+    <path
+        android:fillColor="#D8E2FF"
+        android:pathData="M73,58A10,10 0,1 1,73 78A10,10 0,1 1,73 58Z" />
+    <path
+        android:fillColor="#455E91"
+        android:pathData="M73,60A8,8 0,1 1,73 76A8,8 0,1 1,73 60Z" />
+    <!-- Material verified_user icon, scaled into the badge -->
+    <group
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        android:translateX="67"
+        android:translateY="62">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5l-9,-4zM10,17l-4,-4 1.41,-1.41L10,14.17l6.59,-6.59L18,9l-8,8z" />
+    </group>
 </vector>

@@ -54,6 +54,31 @@ public final class EventTimes {
         return slotsFrom(start.plusMinutes(SLOT_MINUTES), SLOTS_PER_DAY - 1);
     }
 
+    /** Returns the times on offer from first to last, both included, across midnight too. */
+    public static List<LocalTime> slotsBetween(LocalTime first, LocalTime last) {
+        long minutes = first.equals(last) ? 0 : minutesBetween(first, last);
+        return slotsFrom(first, (int) (minutes / SLOT_MINUTES) + 1);
+    }
+
+    /** Returns the time a slot after this one, the earliest end for a start. */
+    public static LocalTime nextSlot(LocalTime time) {
+        return time.plusMinutes(SLOT_MINUTES);
+    }
+
+    /** Returns the time a slot before this one, the latest start for an end. */
+    public static LocalTime previousSlot(LocalTime time) {
+        return time.minusMinutes(SLOT_MINUTES);
+    }
+
+    /** Formats each time as HH:MM, for a list of times to choose from. */
+    public static String[] format(List<LocalTime> times) {
+        String[] labels = new String[times.size()];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = format(times.get(i));
+        }
+        return labels;
+    }
+
     /** Returns true when the end is at or before the start, so it falls on the next day. */
     public static boolean endsNextDay(LocalTime start, LocalTime end) {
         return !end.isAfter(start);
@@ -69,6 +94,12 @@ public final class EventTimes {
     public static long minutesBetween(LocalTime start, LocalTime end) {
         long minutes = Duration.between(start, end).toMinutes();
         return endsNextDay(start, end) ? minutes + MINUTES_PER_DAY : minutes;
+    }
+
+    /** Returns true when start to end lies within from to to, both runs counted across midnight. */
+    public static boolean isWithin(LocalTime start, LocalTime end, LocalTime from, LocalTime to) {
+        long startOffset = start.equals(from) ? 0 : minutesBetween(from, start);
+        return startOffset + minutesBetween(start, end) <= minutesBetween(from, to);
     }
 
     /** Formats the length of an event, such as "45 min", "4 hr" or "1 hr 30 min". */

@@ -2,4 +2,9 @@
 <resources>
     <integer name="event_list_columns">1</integer>
     <integer name="text_max_length">100</integer>
+    <integer name="description_max_length">500</integer>
+    <!-- The longest address RFC 5321 allows -->
+    <integer name="email_max_length">254</integer>
+    <!-- 15 digits, as in E.164, with room for spaces and a plus -->
+    <integer name="phone_max_length">20</integer>
 </resources>

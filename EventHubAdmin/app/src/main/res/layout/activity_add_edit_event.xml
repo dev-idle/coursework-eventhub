@@ -15,15 +15,19 @@
         app:navigationContentDescription="@string/description_navigate_up"
         app:navigationIcon="?attr/homeAsUpIndicator" />
 
+    <!-- Fills the screen, so the sheet reaches the bottom when the form is short. -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
+            android:id="@+id/sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/card_body"
             android:orientation="vertical"
             android:padding="@dimen/screen_padding">
 
@@ -42,6 +46,29 @@
                     android:importantForAutofill="no"
                     android:inputType="textCapSentences"
                     android:maxLength="@integer/text_max_length" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Starts at two lines and grows as the user types. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/description_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_description"
+                app:counterEnabled="true"
+                app:counterMaxLength="@integer/description_max_length"
+                app:helperText="@string/helper_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/description_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences|textMultiLine"
+                    android:maxLength="@integer/description_max_length"
+                    android:minLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- No error icon here, so the calendar button stays visible while an error shows. -->
@@ -143,10 +170,49 @@
                     android:id="@+id/organizer_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionDone|flagNoExtractUi"
+                    android:imeOptions="actionNext|flagNoExtractUi"
                     android:importantForAutofill="no"
                     android:inputType="textCapWords"
                     android:maxLength="@integer/text_max_length" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/contact_email_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_contact_email"
+                app:helperText="@string/helper_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/contact_email_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="emailAddress"
+                    android:imeOptions="actionNext|flagNoExtractUi"
+                    android:inputType="textEmailAddress"
+                    android:maxLength="@integer/email_max_length" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/contact_phone_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_contact_phone"
+                app:helperText="@string/helper_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/contact_phone_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="phone"
+                    android:digits="@string/digits_phone"
+                    android:imeOptions="actionDone|flagNoExtractUi"
+                    android:inputType="phone"
+                    android:maxLength="@integer/phone_max_length" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- AddEditEventActivity fills it from EventType and restores the chosen type. -->
@@ -186,12 +252,12 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/save_button"
+                android:id="@+id/continue_button"
                 style="@style/Widget.EventHubAdmin.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_large"
-                android:text="@string/button_save_event" />
+                android:text="@string/button_continue" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

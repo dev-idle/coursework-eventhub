@@ -5,11 +5,15 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -30,7 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The form for adding or editing an event, which it saves before returning its ID.
+ * The form for adding or editing an event, saved once the user confirms it on a review screen.
  */
 public class AddEditEventActivity extends AppCompatActivity {
 
@@ -52,23 +56,30 @@ public class AddEditEventActivity extends AppCompatActivity {
     private static final EventStatus DEFAULT_STATUS = EventStatus.UPCOMING;
 
     private MaterialToolbar toolbar;
+    private View sheet;
     private TextInputLayout nameLayout;
+    private TextInputLayout descriptionLayout;
     private TextInputLayout dateLayout;
     private TextInputLayout startTimeLayout;
     private TextInputLayout endTimeLayout;
     private TextInputLayout locationLayout;
     private TextInputLayout organizerLayout;
+    private TextInputLayout contactEmailLayout;
+    private TextInputLayout contactPhoneLayout;
     private TextInputLayout typeLayout;
     private TextInputLayout statusLayout;
     private EditText nameInput;
+    private EditText descriptionInput;
     private EditText dateInput;
     private DropdownField startTimeInput;
     private DropdownField endTimeInput;
     private EditText locationInput;
     private EditText organizerInput;
+    private EditText contactEmailInput;
+    private EditText contactPhoneInput;
     private DropdownField typeInput;
     private DropdownField statusInput;
-    private Button saveButton;
+    private Button continueButton;
 
     private EventDatabase database;
     @Nullable
@@ -79,6 +90,11 @@ public class AddEditEventActivity extends AppCompatActivity {
     // What each field showed when the form opened, to tell whether anything changed.
     private String[] originalTexts;
     private AlertDialog discardDialog;
+    // Set while the review screen opens, so a quick second tap does not open it twice.
+    private boolean opening;
+
+    private final ActivityResultLauncher<Intent> reviewLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), this::saveReviewedEvent);
 
     // Enabled only once a field changes, so an unchanged form keeps the system back animation.
     private final OnBackPressedCallback discardCallback = new OnBackPressedCallback(false) {
@@ -95,8 +111,13 @@ public class AddEditEventActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_edit_event);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
-                    | WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.ime());
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                    | WindowInsetsCompat.Type.displayCutout());
+            int keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+            // Above the keyboard when it shows, otherwise the sheet runs under the navigation bar.
+            v.setPadding(bars.left, bars.top, bars.right, keyboard);
+            sheet.setPadding(sheet.getPaddingLeft(), sheet.getPaddingTop(),
+                    sheet.getPaddingRight(), getResources().getDimensionPixelSize(
+                            R.dimen.screen_padding) + (keyboard > 0 ? 0 : bars.bottom));
             return insets;
         });
 
@@ -111,7 +132,6 @@ public class AddEditEventActivity extends AppCompatActivity {
         eventToEdit = getIntent().getSerializableExtra(EXTRA_EVENT, Event.class);
         if (eventToEdit != null) {
             setTitle(R.string.title_edit_event);
-            saveButton.setText(R.string.button_save_changes);
             if (savedInstanceState == null) {
                 fillForm(eventToEdit);
             }
@@ -124,7 +144,13 @@ public class AddEditEventActivity extends AppCompatActivity {
         getSupportFragmentManager().setFragmentResultListener(DatePickerFragment.REQUEST_KEY,
                 this, (key, result) -> setTextAtEnd(dateInput, EventDates.format(
                         result.getSerializable(DatePickerFragment.RESULT_DATE, LocalDate.class))));
-        saveButton.setOnClickListener(v -> save());
+        continueButton.setOnClickListener(v -> review());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        opening = false;
     }
 
     @Override
@@ -185,28 +211,37 @@ public class AddEditEventActivity extends AppCompatActivity {
 
     private void bindViews() {
         toolbar = findViewById(R.id.toolbar);
+        sheet = findViewById(R.id.sheet);
         nameLayout = findViewById(R.id.name_layout);
+        descriptionLayout = findViewById(R.id.description_layout);
         dateLayout = findViewById(R.id.date_layout);
         startTimeLayout = findViewById(R.id.start_time_layout);
         endTimeLayout = findViewById(R.id.end_time_layout);
         locationLayout = findViewById(R.id.location_layout);
         organizerLayout = findViewById(R.id.organizer_layout);
+        contactEmailLayout = findViewById(R.id.contact_email_layout);
+        contactPhoneLayout = findViewById(R.id.contact_phone_layout);
         typeLayout = findViewById(R.id.type_layout);
         statusLayout = findViewById(R.id.status_layout);
         nameInput = findViewById(R.id.name_input);
+        descriptionInput = findViewById(R.id.description_input);
         dateInput = findViewById(R.id.date_input);
         startTimeInput = findViewById(R.id.start_time_input);
         endTimeInput = findViewById(R.id.end_time_input);
         locationInput = findViewById(R.id.location_input);
         organizerInput = findViewById(R.id.organizer_input);
+        contactEmailInput = findViewById(R.id.contact_email_input);
+        contactPhoneInput = findViewById(R.id.contact_phone_input);
         typeInput = findViewById(R.id.type_input);
         statusInput = findViewById(R.id.status_input);
-        saveButton = findViewById(R.id.save_button);
+        continueButton = findViewById(R.id.continue_button);
     }
 
+    /** Returns every field in the order of the form, so focus goes to the first error. */
     private TextInputLayout[] allLayouts() {
-        return new TextInputLayout[] {nameLayout, dateLayout, startTimeLayout, endTimeLayout,
-                locationLayout, organizerLayout, typeLayout, statusLayout};
+        return new TextInputLayout[] {nameLayout, descriptionLayout, dateLayout, startTimeLayout,
+                endTimeLayout, locationLayout, organizerLayout, contactEmailLayout,
+                contactPhoneLayout, typeLayout, statusLayout};
     }
 
     private void buildTypeMenu() {
@@ -235,7 +270,7 @@ public class AddEditEventActivity extends AppCompatActivity {
 
     private void buildTimeMenus() {
         List<LocalTime> startTimes = EventTimes.allSlots();
-        startTimeInput.setSimpleItems(labelsOf(startTimes));
+        startTimeInput.setSimpleItems(EventTimes.format(startTimes));
         startTimeInput.setPreferredItem(EventTimes.format(DEFAULT_START_TIME));
         startTimeInput.setOnItemClickListener((parent, view, position, id) ->
                 changeStartTime(startTimes.get(position)));
@@ -245,7 +280,7 @@ public class AddEditEventActivity extends AppCompatActivity {
     /** Offers end times after the start, past midnight too, or every time until one is chosen. */
     private void buildEndMenu(@Nullable LocalTime start) {
         LocalTime from = start != null ? start : DEFAULT_START_TIME;
-        endTimeInput.setSimpleItems(labelsOf(
+        endTimeInput.setSimpleItems(EventTimes.format(
                 start != null ? EventTimes.slotsAfter(start) : EventTimes.allSlots()));
         endTimeInput.setPreferredItem(EventTimes.format(from.plus(DEFAULT_LENGTH)));
     }
@@ -266,6 +301,7 @@ public class AddEditEventActivity extends AppCompatActivity {
     /** Fills the form with an event's values, so they can be edited. */
     private void fillForm(Event event) {
         nameInput.setText(event.getName());
+        descriptionInput.setText(event.getDescription());
         dateInput.setText(EventDates.format(event.getDate()));
         selectedStartTime = event.getStartTime();
         startTimeInput.setText(EventTimes.format(selectedStartTime), false);
@@ -273,6 +309,8 @@ public class AddEditEventActivity extends AppCompatActivity {
         endTimeInput.setText(EventTimes.format(event.getEndTime()), false);
         locationInput.setText(event.getLocation());
         organizerInput.setText(event.getOrganizer());
+        contactEmailInput.setText(event.getContactEmail());
+        contactPhoneInput.setText(event.getContactPhone());
         selectedType = event.getType();
         typeInput.setText(getString(selectedType.getLabelRes()), false);
         selectedStatus = event.getStatus();
@@ -316,7 +354,11 @@ public class AddEditEventActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void save() {
+    /** Checks every field, then opens the event on the review screen if all are valid. */
+    private void review() {
+        if (opening) {
+            return;
+        }
         EventValidator.Result<String> name = EventValidator.validateText(textOf(nameInput));
         EventValidator.Result<LocalDate> date = EventValidator.validateDate(textOf(dateInput));
         EventValidator.Result<LocalTime> startTime =
@@ -327,6 +369,10 @@ public class AddEditEventActivity extends AppCompatActivity {
                 EventValidator.validateText(textOf(locationInput));
         EventValidator.Result<String> organizer =
                 EventValidator.validateText(textOf(organizerInput));
+        EventValidator.Result<String> contactEmail =
+                EventValidator.validateEmail(textOf(contactEmailInput));
+        EventValidator.Result<String> contactPhone =
+                EventValidator.validatePhone(textOf(contactPhoneInput));
         EventValidator.Result<EventType> type = EventValidator.validateType(selectedType);
         LocalDateTime end = date.isValid() && startTime.isValid() && endTime.isValid()
                 ? EventTimes.endOn(date.getValue(), startTime.getValue(), endTime.getValue())
@@ -343,12 +389,25 @@ public class AddEditEventActivity extends AppCompatActivity {
                 location.isValid() ? null : getString(R.string.error_location_required));
         organizerLayout.setError(
                 organizer.isValid() ? null : getString(R.string.error_organizer_required));
+        contactEmailLayout.setError(
+                contactEmail.isValid() ? null : getString(R.string.error_email_format));
+        contactPhoneLayout.setError(
+                contactPhone.isValid() ? null : getString(R.string.error_phone_format));
         typeLayout.setError(type.isValid() ? null : getString(R.string.error_type_required));
         statusLayout.setError(status.isValid() ? null : statusError(status.getReason()));
         long id = eventToEdit == null ? Event.NO_ID : eventToEdit.getId();
         if (name.isValid() && date.isValid() && EventValidator.isDuplicate(
                 name.getValue(), date.getValue(), id, database.getAllEvents())) {
             nameLayout.setError(getString(R.string.error_name_duplicate));
+        }
+        if (eventToEdit != null && startTime.isValid() && endTime.isValid()) {
+            List<Session> sessions = database.getSessions(eventToEdit);
+            if (!EventValidator.fitsSessions(
+                    sessions, startTime.getValue(), endTime.getValue())) {
+                endTimeLayout.setError(getString(R.string.error_end_time_sessions,
+                        EventTimes.format(sessions.get(0).getStartTime()),
+                        EventTimes.format(lastSessionEnd(sessions))));
+            }
         }
 
         for (TextInputLayout layout : allLayouts()) {
@@ -359,12 +418,28 @@ public class AddEditEventActivity extends AppCompatActivity {
         }
         Event event = new Event(id, name.getValue(), date.getValue(), startTime.getValue(),
                 endTime.getValue(), location.getValue(), organizer.getValue(), type.getValue(),
-                status.getValue());
+                status.getValue(), textOf(descriptionInput).trim(), contactEmail.getValue(),
+                contactPhone.getValue());
         if (event.equals(eventToEdit)) {
             // Nothing changed, so there is nothing to save or confirm.
             finish();
             return;
         }
+        opening = true;
+        reviewLauncher.launch(new Intent(AddEditEventActivity.this, EventDetailsActivity.class)
+                .putExtra(EventDetailsActivity.EXTRA_REVIEW_EVENT, event));
+    }
+
+    /** Saves the event once the user confirms it; Edit on the review screen comes back here. */
+    private void saveReviewedEvent(ActivityResult result) {
+        Intent data = result.getData();
+        if (result.getResultCode() != RESULT_OK || data == null) {
+            return;
+        }
+        // The event comes back with the result, so it survives the form being recreated.
+        Event event = data.getSerializableExtra(EventDetailsActivity.EXTRA_REVIEW_EVENT,
+                Event.class);
+        long id = event.getId();
         if (id == Event.NO_ID) {
             id = database.insertEvent(event);
         } else {
@@ -372,6 +447,19 @@ public class AddEditEventActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, new Intent().putExtra(EXTRA_EVENT_ID, id));
         finish();
+    }
+
+    /** Returns when the last of the sessions ends, counted from the event's saved start. */
+    private LocalTime lastSessionEnd(List<Session> sessions) {
+        LocalTime from = eventToEdit.getStartTime();
+        LocalTime last = sessions.get(0).getEndTime();
+        for (Session session : sessions) {
+            if (EventTimes.minutesBetween(from, session.getEndTime())
+                    > EventTimes.minutesBetween(from, last)) {
+                last = session.getEndTime();
+            }
+        }
+        return last;
     }
 
     private String dateError(EventValidator.Reason reason) {
@@ -423,14 +511,6 @@ public class AddEditEventActivity extends AppCompatActivity {
         String length = EventTimes.formatLength(getResources(), start.getValue(), end.getValue());
         endTimeLayout.setHelperText(EventTimes.endsNextDay(start.getValue(), end.getValue())
                 ? getString(R.string.end_time_next_day, length) : length);
-    }
-
-    private static String[] labelsOf(List<LocalTime> times) {
-        String[] labels = new String[times.size()];
-        for (int i = 0; i < labels.length; i++) {
-            labels[i] = EventTimes.format(times.get(i));
-        }
-        return labels;
     }
 
     private static String textOf(EditText input) {

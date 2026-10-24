@@ -12,7 +12,9 @@ import androidx.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Saves events in SQLite, as the module brief's database helper does.
@@ -20,9 +22,10 @@ import java.util.List;
 public class EventDatabase extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "events.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 4;
 
     // Dates are stored as YYYY-MM-DD and times as HH:MM, so text order is time order.
+    // The optional details are empty strings when not given.
     private static final String CREATE_TABLE = "CREATE TABLE Event ("
             + "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
             + "Name TEXT NOT NULL, "
@@ -32,23 +35,57 @@ public class EventDatabase extends SQLiteOpenHelper {
             + "Location TEXT NOT NULL, "
             + "Organizer TEXT NOT NULL, "
             + "Type TEXT NOT NULL, "
-            + "Status TEXT NOT NULL)";
-    private static final String INSERT = "INSERT INTO Event "
-            + "(Name, Date, StartTime, EndTime, Location, Organizer, Type, Status) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            + "Status TEXT NOT NULL, "
+            + "Description TEXT NOT NULL, "
+            + "ContactEmail TEXT NOT NULL, "
+            + "ContactPhone TEXT NOT NULL)";
+    private static final String INSERT = "INSERT INTO Event (Name, Date, StartTime, EndTime, "
+            + "Location, Organizer, Type, Status, Description, ContactEmail, ContactPhone) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String UPDATE = "UPDATE Event SET Name = ?, Date = ?, StartTime = ?, "
-            + "EndTime = ?, Location = ?, Organizer = ?, Type = ?, Status = ? WHERE ID = ?";
+            + "EndTime = ?, Location = ?, Organizer = ?, Type = ?, Status = ?, Description = ?, "
+            + "ContactEmail = ?, ContactPhone = ? WHERE ID = ?";
     // The ID comes last, as in UPDATE, so the details bind the same way.
-    private static final String RESTORE = "INSERT INTO Event "
-            + "(Name, Date, StartTime, EndTime, Location, Organizer, Type, Status, ID) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String RESTORE = "INSERT INTO Event (Name, Date, StartTime, EndTime, "
+            + "Location, Organizer, Type, Status, Description, ContactEmail, ContactPhone, ID) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE = "DELETE FROM Event WHERE ID = ?";
-    private static final String SELECT = "SELECT ID, Name, Date, StartTime, EndTime, "
-            + "Location, Organizer, Type, Status FROM Event ";
+    private static final String SELECT = "SELECT ID, Name, Date, StartTime, EndTime, Location, "
+            + "Organizer, Type, Status, Description, ContactEmail, ContactPhone FROM Event ";
     private static final String START_ORDER = "ORDER BY Date, StartTime, ID";
     private static final String SELECT_ALL = SELECT + START_ORDER;
     private static final String SELECT_BY_STATUS = SELECT + "WHERE Status = ? " + START_ORDER;
     private static final String SELECT_BY_ID = SELECT + "WHERE ID = ?";
+    // A session's times fall within its event, and the session is deleted with the event.
+    private static final String CREATE_SESSION_TABLE = "CREATE TABLE Session ("
+            + "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + "EventID INTEGER NOT NULL REFERENCES Event(ID) ON DELETE CASCADE, "
+            + "Name TEXT NOT NULL, "
+            + "StartTime TEXT NOT NULL, "
+            + "EndTime TEXT NOT NULL, "
+            + "Type TEXT NOT NULL, "
+            + "Speaker TEXT NOT NULL, "
+            + "Room TEXT NOT NULL, "
+            + "Description TEXT NOT NULL)";
+    // Finds an event's sessions without reading the whole table, also when it is deleted.
+    private static final String CREATE_SESSION_INDEX =
+            "CREATE INDEX SessionEventID ON Session (EventID)";
+    private static final String INSERT_SESSION = "INSERT INTO Session (EventID, Name, "
+            + "StartTime, EndTime, Type, Speaker, Room, Description) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String UPDATE_SESSION = "UPDATE Session SET EventID = ?, Name = ?, "
+            + "StartTime = ?, EndTime = ?, Type = ?, Speaker = ?, Room = ?, Description = ? "
+            + "WHERE ID = ?";
+    private static final String RESTORE_SESSION = "INSERT INTO Session (EventID, Name, "
+            + "StartTime, EndTime, Type, Speaker, Room, Description, ID) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String DELETE_SESSION = "DELETE FROM Session WHERE ID = ?";
+    // Sessions that start before the event's start time are on the next day, so they go last.
+    private static final String SELECT_SESSIONS = "SELECT ID, EventID, Name, StartTime, "
+            + "EndTime, Type, Speaker, Room, Description FROM Session WHERE EventID = ? "
+            + "ORDER BY StartTime < ?, StartTime, ID";
+    private static final String COUNT_SESSIONS =
+            "SELECT EventID, COUNT(*) FROM Session GROUP BY EventID";
     // An event ends on the next day when its end time is not after its start time.
     private static final String COMPLETE_ENDED = "UPDATE Event SET Status = ? "
             + "WHERE Status = ? AND (CASE WHEN EndTime > StartTime THEN Date "
@@ -59,8 +96,16 @@ public class EventDatabase extends SQLiteOpenHelper {
     }
 
     @Override
+    public void onConfigure(SQLiteDatabase db) {
+        // SQLite leaves foreign keys off unless asked, and ON DELETE CASCADE needs them.
+        db.setForeignKeyConstraintsEnabled(true);
+    }
+
+    @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE);
+        db.execSQL(CREATE_SESSION_TABLE);
+        db.execSQL(CREATE_SESSION_INDEX);
     }
 
     @Override
@@ -68,6 +113,17 @@ public class EventDatabase extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             // Version 2 adds the status, and events saved before it count as upcoming.
             db.execSQL("ALTER TABLE Event ADD COLUMN Status TEXT NOT NULL DEFAULT 'UPCOMING'");
+        }
+        if (oldVersion < 3) {
+            // Version 3 adds the optional details, which events saved before it leave empty.
+            db.execSQL("ALTER TABLE Event ADD COLUMN Description TEXT NOT NULL DEFAULT ''");
+            db.execSQL("ALTER TABLE Event ADD COLUMN ContactEmail TEXT NOT NULL DEFAULT ''");
+            db.execSQL("ALTER TABLE Event ADD COLUMN ContactPhone TEXT NOT NULL DEFAULT ''");
+        }
+        if (oldVersion < 4) {
+            // Version 4 adds the sessions of each event.
+            db.execSQL(CREATE_SESSION_TABLE);
+            db.execSQL(CREATE_SESSION_INDEX);
         }
     }
 
@@ -83,7 +139,7 @@ public class EventDatabase extends SQLiteOpenHelper {
     public void updateEvent(Event event) {
         try (SQLiteStatement statement = getWritableDatabase().compileStatement(UPDATE)) {
             bindDetails(statement, event);
-            statement.bindLong(9, event.getId());
+            statement.bindLong(12, event.getId());
             statement.executeUpdateDelete();
         }
     }
@@ -111,15 +167,22 @@ public class EventDatabase extends SQLiteOpenHelper {
         }
     }
 
-    /** Saves deleted events again under their IDs, to undo a delete, in one transaction. */
-    public void restoreEvents(List<Event> events) {
+    /** Saves deleted events and their sessions again under their IDs, in one transaction. */
+    public void restoreEvents(List<Event> events, List<Session> sessions) {
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
-        try (SQLiteStatement statement = db.compileStatement(RESTORE)) {
+        try (SQLiteStatement eventStatement = db.compileStatement(RESTORE);
+                SQLiteStatement sessionStatement = db.compileStatement(RESTORE_SESSION)) {
             for (Event event : events) {
-                bindDetails(statement, event);
-                statement.bindLong(9, event.getId());
-                statement.executeInsert();
+                bindDetails(eventStatement, event);
+                eventStatement.bindLong(12, event.getId());
+                eventStatement.executeInsert();
+            }
+            // After the events, as each session needs its event to exist.
+            for (Session session : sessions) {
+                bindSessionDetails(sessionStatement, session);
+                sessionStatement.bindLong(9, session.getId());
+                sessionStatement.executeInsert();
             }
             db.setTransactionSuccessful();
         } finally {
@@ -166,6 +229,73 @@ public class EventDatabase extends SQLiteOpenHelper {
         }
     }
 
+    /** Saves a new session and returns its ID. */
+    public long insertSession(Session session) {
+        try (SQLiteStatement statement = getWritableDatabase().compileStatement(INSERT_SESSION)) {
+            bindSessionDetails(statement, session);
+            return statement.executeInsert();
+        }
+    }
+
+    /** Saves the changes to a session that is already saved. */
+    public void updateSession(Session session) {
+        try (SQLiteStatement statement = getWritableDatabase().compileStatement(UPDATE_SESSION)) {
+            bindSessionDetails(statement, session);
+            statement.bindLong(9, session.getId());
+            statement.executeUpdateDelete();
+        }
+    }
+
+    /** Deletes the session with this ID. */
+    public void deleteSession(long id) {
+        try (SQLiteStatement statement = getWritableDatabase().compileStatement(DELETE_SESSION)) {
+            statement.bindLong(1, id);
+            statement.executeUpdateDelete();
+        }
+    }
+
+    /** Saves a deleted session again under its ID, to undo a delete. */
+    public void restoreSession(Session session) {
+        try (SQLiteStatement statement =
+                getWritableDatabase().compileStatement(RESTORE_SESSION)) {
+            bindSessionDetails(statement, session);
+            statement.bindLong(9, session.getId());
+            statement.executeInsert();
+        }
+    }
+
+    /** Returns the sessions of an event in the order they take place. */
+    public List<Session> getSessions(Event event) {
+        List<Session> sessions = new ArrayList<>();
+        try (Cursor cursor = getReadableDatabase().rawQuery(SELECT_SESSIONS, new String[] {
+                String.valueOf(event.getId()), EventTimes.format(event.getStartTime())})) {
+            while (cursor.moveToNext()) {
+                sessions.add(readSession(cursor));
+            }
+        }
+        return sessions;
+    }
+
+    /** Returns the sessions of all these events, to save them again if the events are restored. */
+    public List<Session> getSessions(List<Event> events) {
+        List<Session> sessions = new ArrayList<>();
+        for (Event event : events) {
+            sessions.addAll(getSessions(event));
+        }
+        return sessions;
+    }
+
+    /** Returns how many sessions each event has, by event ID, without events that have none. */
+    public Map<Long, Integer> getSessionCounts() {
+        Map<Long, Integer> counts = new HashMap<>();
+        try (Cursor cursor = getReadableDatabase().rawQuery(COUNT_SESSIONS, null)) {
+            while (cursor.moveToNext()) {
+                counts.put(cursor.getLong(0), cursor.getInt(1));
+            }
+        }
+        return counts;
+    }
+
     /** Returns how many events are saved. */
     public long countEvents() {
         return DatabaseUtils.queryNumEntries(getReadableDatabase(), "Event");
@@ -176,10 +306,11 @@ public class EventDatabase extends SQLiteOpenHelper {
         return new Event(cursor.getLong(0), cursor.getString(1),
                 LocalDate.parse(cursor.getString(2)), EventTimes.parse(cursor.getString(3)),
                 EventTimes.parse(cursor.getString(4)), cursor.getString(5), cursor.getString(6),
-                EventType.valueOf(cursor.getString(7)), EventStatus.valueOf(cursor.getString(8)));
+                EventType.valueOf(cursor.getString(7)), EventStatus.valueOf(cursor.getString(8)),
+                cursor.getString(9), cursor.getString(10), cursor.getString(11));
     }
 
-    /** Binds the event's details to parameters 1 to 8, in the order of the Event columns. */
+    /** Binds the event's details to parameters 1 to 11, in the order of the Event columns. */
     private static void bindDetails(SQLiteStatement statement, Event event) {
         statement.bindString(1, event.getName());
         statement.bindString(2, event.getDate().toString());
@@ -189,5 +320,28 @@ public class EventDatabase extends SQLiteOpenHelper {
         statement.bindString(6, event.getOrganizer());
         statement.bindString(7, event.getType().name());
         statement.bindString(8, event.getStatus().name());
+        statement.bindString(9, event.getDescription());
+        statement.bindString(10, event.getContactEmail());
+        statement.bindString(11, event.getContactPhone());
+    }
+
+    /** Reads the session in the cursor's current row, in the column order of SELECT_SESSIONS. */
+    private static Session readSession(Cursor cursor) {
+        return new Session(cursor.getLong(0), cursor.getLong(1), cursor.getString(2),
+                EventTimes.parse(cursor.getString(3)), EventTimes.parse(cursor.getString(4)),
+                SessionType.valueOf(cursor.getString(5)), cursor.getString(6),
+                cursor.getString(7), cursor.getString(8));
+    }
+
+    /** Binds the session's details to parameters 1 to 8, in the order of the Session columns. */
+    private static void bindSessionDetails(SQLiteStatement statement, Session session) {
+        statement.bindLong(1, session.getEventId());
+        statement.bindString(2, session.getName());
+        statement.bindString(3, EventTimes.format(session.getStartTime()));
+        statement.bindString(4, EventTimes.format(session.getEndTime()));
+        statement.bindString(5, session.getType().name());
+        statement.bindString(6, session.getSpeaker());
+        statement.bindString(7, session.getRoom());
+        statement.bindString(8, session.getDescription());
     }
 }

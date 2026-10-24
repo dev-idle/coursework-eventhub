@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">EventHub Admin</string>
+    <!-- Short enough to fit under the launcher icon without being cut -->
+    <string name="launcher_label">Admin</string>
 
     <string name="empty_title">No events yet</string>
     <string name="empty_message">Events you add appear here.</string>
@@ -50,6 +52,8 @@
     <string name="event_length_hours_minutes">%1$d hr %2$d min</string>
     <!-- Marks an end time on the next day -->
     <string name="next_day_marker" translatable="false">+1</string>
+    <!-- Such as "09:00–17:30" -->
+    <string name="time_range">%1$s–%2$s</string>
     <string name="description_time_range">From %1$s to %2$s, %3$s</string>
     <string name="description_time_range_next_day">From %1$s to %2$s the next day, %3$s</string>
     <string name="description_location">Location: %1$s</string>
@@ -84,28 +88,44 @@
         <item quantity="one">The selected event will be deleted.</item>
         <item quantity="other">The selected events will be deleted.</item>
     </plurals>
+    <plurals name="delete_events_message_with_sessions">
+        <item quantity="one">The selected event and its sessions will be deleted.</item>
+        <item quantity="other">The selected events and their sessions will be deleted.</item>
+    </plurals>
 
     <string name="title_add_event">Add event</string>
     <string name="title_edit_event">Edit event</string>
     <string name="title_event_details">Event details</string>
-    <string name="description_starts_ends">Starts at %1$s on %2$s, ends at %3$s on %4$s, %5$s</string>
+    <string name="title_review_event">Review event</string>
+    <string name="title_review_changes">Review changes</string>
+    <string name="title_description">Description</string>
     <string name="menu_more">More options</string>
     <string name="menu_edit">Edit event</string>
     <string name="menu_delete">Delete event</string>
     <string name="label_name">Event name</string>
+    <string name="label_description">Event description</string>
     <string name="label_date">Event date</string>
     <string name="label_start_time">Start time</string>
     <string name="label_end_time">End time</string>
     <string name="end_time_next_day">Next day (%1$s)</string>
     <string name="label_location">Event location</string>
     <string name="label_organizer">Event organizer</string>
+    <string name="label_contact_email">Contact email</string>
+    <string name="label_contact_phone">Contact phone</string>
     <string name="label_type">Event type</string>
     <string name="label_status">Event status</string>
     <string name="helper_date_format" translatable="false">DD/MM/YYYY</string>
+    <string name="helper_optional">Optional</string>
     <string name="description_choose_date">Choose a date</string>
     <string name="description_navigate_up">Navigate up</string>
+    <string name="button_continue">Continue</string>
+    <string name="button_edit">Edit</string>
     <string name="button_save_event">Save event</string>
     <string name="button_save_changes">Save changes</string>
+    <!-- Accessibility actions on the contact rows of the details screen -->
+    <string name="action_send_email">Send email</string>
+    <string name="action_call">Call</string>
+    <string name="error_no_app">No app on this device can do this</string>
 
     <string name="discard_title">Discard this event?</string>
     <string name="discard_message">The details you entered will be lost.</string>
@@ -116,6 +136,10 @@
 
     <string name="delete_title">Delete this event?</string>
     <string name="delete_message">“%1$s” on %2$s will be deleted.</string>
+    <plurals name="delete_message_with_sessions">
+        <item quantity="one">“%1$s” on %2$s and its session will be deleted.</item>
+        <item quantity="other">“%1$s” on %2$s and its %3$d sessions will be deleted.</item>
+    </plurals>
     <string name="button_delete">Delete</string>
     <string name="button_cancel">Cancel</string>
 
@@ -129,11 +153,64 @@
     <string name="error_start_time_required">Select the start time</string>
     <string name="error_end_time_required">Select the end time</string>
     <string name="error_end_time_same">End time must be different from the start time</string>
+    <!-- When an edit would leave sessions outside the event, with the times they run -->
+    <string name="error_end_time_sessions">Event must include its sessions, %1$s–%2$s</string>
     <string name="error_location_required">Enter the event location</string>
     <string name="error_organizer_required">Enter the event organizer</string>
+    <string name="error_email_format">Enter an email address like name@example.com</string>
+    <string name="error_phone_format">Enter a phone number with 7 to 15 digits, like 020 7946 0958</string>
     <string name="error_type_required">Select the event type</string>
     <string name="error_status_not_ended">Select Upcoming or Cancelled, as the event has not ended</string>
     <string name="error_status_ended">Select Completed or Cancelled, as the event has ended</string>
+
+    <!-- Sessions within an event -->
+    <string name="title_sessions">Sessions</string>
+    <string name="title_add_session">Add session</string>
+    <string name="title_edit_session">Edit session</string>
+    <string name="button_add_session">Add session</string>
+    <string name="button_save_session">Save session</string>
+    <string name="sessions_empty">No sessions yet</string>
+    <string name="sessions_empty_message">Sessions you add appear here.</string>
+    <!-- The next session to start, such as "Next: 09:00 Opening keynote" -->
+    <string name="next_session">Next: %1$s %2$s</string>
+    <!-- When a session is, such as "Friday 6 November 2026, 09:00–10:00 (1 hr)" -->
+    <string name="session_when">%1$s, %2$s–%3$s (%4$s)</string>
+    <!-- The event a session belongs to, with its time, such as "Tech talks · 09:00–17:30" -->
+    <string name="session_event">%1$s · %2$s–%3$s</string>
+    <string name="label_session_name">Session name</string>
+    <string name="label_session_description">Session description</string>
+    <string name="label_speaker">Speaker</string>
+    <string name="label_room">Room</string>
+    <string name="label_session_type">Session type</string>
+    <string name="message_session_added">Session added</string>
+    <string name="message_session_updated">Session updated</string>
+    <string name="message_session_deleted">Session deleted</string>
+    <string name="discard_session_title">Discard this session?</string>
+    <string name="delete_session_title">Delete this session?</string>
+    <string name="delete_session_message">“%1$s” will be deleted.</string>
+    <string name="error_session_name_required">Enter the session name</string>
+    <string name="error_session_type_required">Select the session type</string>
+    <plurals name="session_count">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
+    <string name="no_sessions">No sessions</string>
+    <!-- A session row read as one sentence, such as "09:00 to 10:00, Keynote, Opening talk" -->
+    <string name="description_session">%1$s to %2$s, %3$s, %4$s</string>
+    <!-- The same, ending with the speaker and the room -->
+    <string name="description_session_details">%1$s to %2$s, %3$s, %4$s, %5$s</string>
+    <!-- A session time after midnight, as TalkBack reads it -->
+    <string name="time_next_day">%1$s the next day</string>
+    <!-- Joins the speaker and the room on a session row -->
+    <string name="session_details_separator" translatable="false">" · "</string>
+
+    <!-- Session types from the coursework brief -->
+    <string name="session_type_workshop">Workshop</string>
+    <string name="session_type_presentation">Presentation</string>
+    <string name="session_type_panel_discussion">Panel discussion</string>
+    <string name="session_type_networking">Networking</string>
+    <string name="session_type_keynote">Keynote</string>
+    <string name="session_type_other">Other</string>
 
     <!-- Event types from the logbook brief -->
     <string name="type_conference">Conference</string>
@@ -149,4 +226,6 @@
 
     <!-- Characters accepted while typing a date -->
     <string name="digits_date" translatable="false">0123456789/</string>
+    <!-- Quoted so the trailing space is kept -->
+    <string name="digits_phone" translatable="false">"0123456789+-() "</string>
 </resources>
