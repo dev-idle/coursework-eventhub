@@ -207,6 +207,15 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
+    <!-- The +1 beside a session time on the next day, like the one beside the end time. -->
+    <style name="Widget.EventHubAdmin.SessionNextDay" parent="">
+        <item name="android:layout_marginStart">@dimen/space_tiny</item>
+        <item name="android:text">@string/next_day_marker</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelSmall</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
     <style name="Widget.EventHubAdmin.DetailValue" parent="">
         <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
         <item name="android:textColor">?attr/colorOnSurface</item>

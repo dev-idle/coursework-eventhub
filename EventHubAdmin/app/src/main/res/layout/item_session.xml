@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A session in the list: its times, then its name, type, speaker and room. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:foreground="?attr/selectableItemBackground"
+    android:paddingStart="@dimen/screen_padding"
+    android:paddingTop="@dimen/space_medium"
+    android:paddingEnd="@dimen/screen_padding"
+    android:paddingBottom="@dimen/space_medium">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="noHideDescendants"
+        android:orientation="vertical">
+
+        <!-- A raised +1 marks a time on the next day, as on the cards. -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/session_start"
+                style="@style/Widget.EventHubAdmin.CardTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="00:00" />
+
+            <TextView
+                android:id="@+id/session_start_next_day"
+                style="@style/Widget.EventHubAdmin.SessionNextDay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/session_end"
+                style="@style/Widget.EventHubAdmin.DetailSupporting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="00:30" />
+
+            <TextView
+                android:id="@+id/session_end_next_day"
+                style="@style/Widget.EventHubAdmin.SessionNextDay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:visibility="visible" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/detail_icon_margin"
+        android:layout_weight="1"
+        android:importantForAccessibility="noHideDescendants"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/session_name"
+            style="@style/Widget.EventHubAdmin.DetailValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Opening keynote" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_extra_small"
+            android:gravity="center_vertical">
+
+            <!-- Gray for every type, so only the event's own type is colored. -->
+            <TextView
+                android:id="@+id/session_type"
+                style="@style/Widget.EventHubAdmin.TypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/type_other_container"
+                tools:text="Keynote" />
+
+            <TextView
+                android:id="@+id/session_details"
+                style="@style/Widget.EventHubAdmin.DetailSupporting"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_small"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                tools:text="Dr Amy Lee · Painted Hall" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

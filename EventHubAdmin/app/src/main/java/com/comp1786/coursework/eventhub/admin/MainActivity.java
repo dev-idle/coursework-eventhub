@@ -32,6 +32,7 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.google.android.material.snackbar.Snackbar;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -346,13 +347,15 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         Intent data = result.getData();
         Event event = data == null
                 ? null : data.getSerializableExtra(EventDetailsActivity.EXTRA_EVENT, Event.class);
-        if (event != null) {
-            showDeletedEvents(Collections.singletonList(event));
+        Session[] sessions = data == null ? null
+                : data.getSerializableExtra(EventDetailsActivity.EXTRA_SESSIONS, Session[].class);
+        if (event != null && sessions != null) {
+            showDeletedEvents(Collections.singletonList(event), Arrays.asList(sessions));
         }
     }
 
-    /** Confirms that events were deleted, with an action that saves them again. */
-    private void showDeletedEvents(List<Event> events) {
+    /** Confirms that events were deleted, with an action that saves them and their sessions. */
+    private void showDeletedEvents(List<Event> events, List<Session> sessions) {
         int count = events.size();
         Snackbar snackbar = IconSnackbar.make(eventList,
                 getResources().getQuantityString(R.plurals.message_events_deleted, count, count),
@@ -360,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         snackbar.setAction(R.string.button_undo, v -> {
             // A second tap before the bar closes would insert the same IDs again and crash.
             v.setEnabled(false);
-            database.restoreEvents(events);
+            database.restoreEvents(events, sessions);
             showEvents();
             scrollToEvent(events.get(0).getId());
         });
@@ -410,19 +413,22 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     /** Asks before deleting the selected events, which Undo can then bring back. */
     private void showDeleteDialog() {
         List<Event> events = adapter.getSelectedEvents();
+        // Read before deleting, as the sessions go with their events.
+        List<Session> sessions = database.getSessions(events);
         int count = events.size();
         deleteDialog = new MaterialAlertDialogBuilder(this,
                 R.style.ThemeOverlay_EventHubAdmin_DestructiveDialog)
                 .setTitle(getResources().getQuantityString(
                         R.plurals.delete_events_title, count, count))
-                .setMessage(getResources().getQuantityString(
-                        R.plurals.delete_events_message, count))
+                .setMessage(getResources().getQuantityString(sessions.isEmpty()
+                        ? R.plurals.delete_events_message
+                        : R.plurals.delete_events_message_with_sessions, count))
                 .setNegativeButton(R.string.button_cancel, null)
                 .setPositiveButton(R.string.button_delete, (dialog, which) -> {
                     database.deleteEvents(events);
                     stopSelection();
                     showEvents();
-                    showDeletedEvents(events);
+                    showDeletedEvents(events, sessions);
                 })
                 .show();
     }

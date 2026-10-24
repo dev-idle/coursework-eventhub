@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".AddEditSessionActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:navigationContentDescription="@string/description_navigate_up"
+        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_padding">
+
+            <!-- The event the session belongs to, and the time its sessions must fit in. -->
+            <TextView
+                android:id="@+id/event_text"
+                style="@style/Widget.EventHubAdmin.DetailSupporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_medium"
+                tools:text="Greenwich tech conference · 09:00–17:30" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/name_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/label_session_name">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext|flagNoExtractUi"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences"
+                    android:maxLength="@integer/text_max_length" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Starts at two lines and grows as the user types. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/description_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_session_description"
+                app:counterEnabled="true"
+                app:counterMaxLength="@integer/description_max_length"
+                app:helperText="@string/helper_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/description_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences|textMultiLine"
+                    android:maxLength="@integer/description_max_length"
+                    android:minLines="2" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- AddEditSessionActivity fills both lists with times within the event. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/start_time_layout"
+                    style="@style/Widget.EventHubAdmin.DropdownField"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="@string/label_start_time">
+
+                    <com.comp1786.coursework.eventhub.admin.DropdownField
+                        android:id="@+id/start_time_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:saveEnabled="false" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/end_time_layout"
+                    style="@style/Widget.EventHubAdmin.DropdownField"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_small"
+                    android:layout_weight="1"
+                    android:hint="@string/label_end_time">
+
+                    <com.comp1786.coursework.eventhub.admin.DropdownField
+                        android:id="@+id/end_time_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:saveEnabled="false" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/speaker_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_speaker"
+                app:helperText="@string/helper_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/speaker_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext|flagNoExtractUi"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapWords|textPersonName"
+                    android:maxLength="@integer/text_max_length" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/room_layout"
+                style="@style/Widget.EventHubAdmin.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_room"
+                app:helperText="@string/helper_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/room_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone|flagNoExtractUi"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapWords"
+                    android:maxLength="@integer/text_max_length" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- AddEditSessionActivity fills it from SessionType and restores the chosen type. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/type_layout"
+                style="@style/Widget.EventHubAdmin.DropdownField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:hint="@string/label_session_type">
+
+                <com.comp1786.coursework.eventhub.admin.DropdownField
+                    android:id="@+id/type_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:importantForAutofill="no"
+                    android:inputType="none"
+                    android:saveEnabled="false" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/save_button"
+                style="@style/Widget.EventHubAdmin.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_large"
+                android:text="@string/button_save_session" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

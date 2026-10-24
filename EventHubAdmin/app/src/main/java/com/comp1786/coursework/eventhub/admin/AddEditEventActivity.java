@@ -262,7 +262,7 @@ public class AddEditEventActivity extends AppCompatActivity {
 
     private void buildTimeMenus() {
         List<LocalTime> startTimes = EventTimes.allSlots();
-        startTimeInput.setSimpleItems(labelsOf(startTimes));
+        startTimeInput.setSimpleItems(EventTimes.format(startTimes));
         startTimeInput.setPreferredItem(EventTimes.format(DEFAULT_START_TIME));
         startTimeInput.setOnItemClickListener((parent, view, position, id) ->
                 changeStartTime(startTimes.get(position)));
@@ -272,7 +272,7 @@ public class AddEditEventActivity extends AppCompatActivity {
     /** Offers end times after the start, past midnight too, or every time until one is chosen. */
     private void buildEndMenu(@Nullable LocalTime start) {
         LocalTime from = start != null ? start : DEFAULT_START_TIME;
-        endTimeInput.setSimpleItems(labelsOf(
+        endTimeInput.setSimpleItems(EventTimes.format(
                 start != null ? EventTimes.slotsAfter(start) : EventTimes.allSlots()));
         endTimeInput.setPreferredItem(EventTimes.format(from.plus(DEFAULT_LENGTH)));
     }
@@ -481,14 +481,6 @@ public class AddEditEventActivity extends AppCompatActivity {
         String length = EventTimes.formatLength(getResources(), start.getValue(), end.getValue());
         endTimeLayout.setHelperText(EventTimes.endsNextDay(start.getValue(), end.getValue())
                 ? getString(R.string.end_time_next_day, length) : length);
-    }
-
-    private static String[] labelsOf(List<LocalTime> times) {
-        String[] labels = new String[times.size()];
-        for (int i = 0; i < labels.length; i++) {
-            labels[i] = EventTimes.format(times.get(i));
-        }
-        return labels;
     }
 
     private static String textOf(EditText input) {

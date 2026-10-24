@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Checks the values entered for an event, one field at a time.
+ * Checks the values entered for an event or a session, one field at a time.
  */
 public final class EventValidator {
 
@@ -95,8 +95,8 @@ public final class EventValidator {
         return end;
     }
 
-    /** Validates the type chosen from the list, which is null until the user picks one. */
-    public static Result<EventType> validateType(@Nullable EventType type) {
+    /** Validates an event or session type chosen from a list, null until the user picks one. */
+    public static <T> Result<T> validateType(@Nullable T type) {
         return type == null ? Result.invalid(Reason.EMPTY) : Result.valid(type);
     }
 

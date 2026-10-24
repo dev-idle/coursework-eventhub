@@ -46,6 +46,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     public static final String EXTRA_REVIEW_EVENT = "review_event";
     /** Result extra holding the deleted event, so MainActivity can save it again. */
     public static final String EXTRA_EVENT = "event";
+    /** Result extra holding the deleted event's sessions, as a Session array. */
+    public static final String EXTRA_SESSIONS = "sessions";
     /** Result code when the event was deleted. */
     public static final int RESULT_DELETED = RESULT_FIRST_USER;
 
@@ -74,6 +76,9 @@ public class EventDetailsActivity extends AppCompatActivity {
     private View reviewBar;
     private Button editButton;
     private Button confirmButton;
+    private View sessionsRow;
+    private TextView sessionCountText;
+    private TextView nextSessionText;
 
     private EventDatabase database;
     private long eventId;
@@ -83,6 +88,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Event event;
     private AlertDialog deleteDialog;
     private ListPopupWindow moreMenu;
+    // Set while another screen opens, so a quick second tap does not open it twice.
+    private boolean opening;
 
     private final ActivityResultLauncher<Intent> editEventLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -116,12 +123,14 @@ public class EventDetailsActivity extends AppCompatActivity {
             showReviewBar(reviewEvent.getId() == Event.NO_ID);
         } else {
             enableContactRows();
+            sessionsRow.setOnClickListener(v -> openSessions());
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        opening = false;
         // Reloads the event, which may have been edited or have ended since it was shown.
         showEvent();
     }
@@ -202,6 +211,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         reviewBar = findViewById(R.id.review_bar);
         editButton = findViewById(R.id.edit_button);
         confirmButton = findViewById(R.id.confirm_button);
+        sessionsRow = findViewById(R.id.sessions_row);
+        sessionCountText = findViewById(R.id.session_count);
+        nextSessionText = findViewById(R.id.next_session);
     }
 
     /** Shows Edit, which goes back to the form, and a button that confirms the event. */
@@ -209,6 +221,8 @@ public class EventDetailsActivity extends AppCompatActivity {
         setTitle(adding ? R.string.title_review_event : R.string.title_review_changes);
         confirmButton.setText(adding ? R.string.button_save_event : R.string.button_save_changes);
         reviewBar.setVisibility(View.VISIBLE);
+        // An unsaved event has no sessions yet.
+        sessionsRow.setVisibility(View.GONE);
         editButton.setOnClickListener(v -> finish());
         confirmButton.setOnClickListener(v -> {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_REVIEW_EVENT, reviewEvent));
@@ -248,18 +262,35 @@ public class EventDetailsActivity extends AppCompatActivity {
                 .putExtra(AddEditEventActivity.EXTRA_EVENT, event));
     }
 
-    /** Asks before deleting the event, which then returns RESULT_DELETED. */
+    /** Opens the event's sessions, to add, view, edit or delete them. */
+    private void openSessions() {
+        if (opening) {
+            return;
+        }
+        opening = true;
+        startActivity(new Intent(EventDetailsActivity.this, SessionsActivity.class)
+                .putExtra(SessionsActivity.EXTRA_EVENT_ID, event.getId()));
+    }
+
+    /** Asks before deleting the event and its sessions, which then returns RESULT_DELETED. */
     private void showDeleteDialog() {
         Event deleted = event;
+        // Read before deleting, as the sessions go with the event, so Undo can save them again.
+        List<Session> sessions = database.getSessions(deleted);
+        String name = deleted.getName();
+        String date = EventDates.format(deleted.getDate());
         deleteDialog = new MaterialAlertDialogBuilder(this,
                 R.style.ThemeOverlay_EventHubAdmin_DestructiveDialog)
                 .setTitle(R.string.delete_title)
-                .setMessage(getString(R.string.delete_message, deleted.getName(),
-                        EventDates.format(deleted.getDate())))
+                .setMessage(sessions.isEmpty()
+                        ? getString(R.string.delete_message, name, date)
+                        : getResources().getQuantityString(R.plurals.delete_message_with_sessions,
+                                sessions.size(), name, date, sessions.size()))
                 .setNegativeButton(R.string.button_cancel, null)
                 .setPositiveButton(R.string.button_delete, (dialog, which) -> {
                     database.deleteEvent(deleted.getId());
-                    setResult(RESULT_DELETED, new Intent().putExtra(EXTRA_EVENT, deleted));
+                    setResult(RESULT_DELETED, new Intent().putExtra(EXTRA_EVENT, deleted)
+                            .putExtra(EXTRA_SESSIONS, sessions.toArray(new Session[0])));
                     finish();
                 })
                 .show();
@@ -298,6 +329,31 @@ public class EventDetailsActivity extends AppCompatActivity {
         showOptional(contactEmailRow, contactEmailText, event.getContactEmail());
         showOptional(contactPhoneRow, contactPhoneText, event.getContactPhone());
         state.showCancelled(nameText, typeLabel, type, startTimeText, endTimeText);
+        if (reviewEvent == null) {
+            showSessionsRow(state, now);
+        }
+    }
+
+    /** Shows how many sessions the event has and, unless it is cancelled, the next to start. */
+    private void showSessionsRow(EventCardState state, LocalDateTime now) {
+        List<Session> sessions = database.getSessions(event);
+        int count = sessions.size();
+        sessionCountText.setText(count == 0 ? getString(R.string.no_sessions)
+                : getResources().getQuantityString(R.plurals.session_count, count, count));
+        Session next = null;
+        if (state != EventCardState.CANCELLED) {
+            for (Session session : sessions) {
+                if (session.getStart(event).isAfter(now)) {
+                    next = session;
+                    break;
+                }
+            }
+        }
+        nextSessionText.setVisibility(next == null ? View.GONE : View.VISIBLE);
+        if (next != null) {
+            nextSessionText.setText(getString(R.string.next_session,
+                    EventTimes.format(next.getStartTime()), next.getName()));
+        }
     }
 
     /** Shows an optional detail, or hides its row when it was left empty. */

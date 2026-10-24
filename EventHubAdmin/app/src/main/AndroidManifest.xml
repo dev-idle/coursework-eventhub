@@ -30,6 +30,15 @@
             android:label="@string/title_add_event"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".AddEditSessionActivity"
+            android:exported="false"
+            android:label="@string/title_add_session"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".SessionsActivity"
+            android:exported="false"
+            android:label="@string/title_sessions" />
+        <activity
             android:name=".EventDetailsActivity"
             android:exported="false"
             android:label="@string/title_event_details" />

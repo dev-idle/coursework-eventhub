@@ -265,6 +265,64 @@
                     app:layout_constraintTop_toBottomOf="@id/start_dot" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!-- Opens the event's sessions, and is hidden while an unsaved event is reviewed. -->
+            <LinearLayout
+                android:id="@+id/sessions_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_padding"
+                android:foreground="?attr/selectableItemBackground"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/time_block">
+
+                <ImageView
+                    android:layout_width="@dimen/detail_icon_size"
+                    android:layout_height="@dimen/detail_icon_size"
+                    android:layout_marginTop="@dimen/space_small"
+                    android:layout_marginEnd="@dimen/detail_icon_margin"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_format_list_bulleted"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.EventHubAdmin.DetailLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_sessions" />
+
+                    <TextView
+                        android:id="@+id/session_count"
+                        style="@style/Widget.EventHubAdmin.DetailValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="4 sessions" />
+
+                    <TextView
+                        android:id="@+id/next_session"
+                        style="@style/Widget.EventHubAdmin.DetailSupporting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        tools:text="Next: 09:00 Opening keynote"
+                        tools:visibility="visible" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="@dimen/detail_icon_size"
+                    android:layout_height="@dimen/detail_icon_size"
+                    android:layout_gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+
             <com.google.android.material.divider.MaterialDivider
                 android:id="@+id/place_divider"
                 android:layout_width="0dp"
@@ -272,7 +330,7 @@
                 android:layout_marginTop="@dimen/screen_padding"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/time_block" />
+                app:layout_constraintTop_toBottomOf="@id/sessions_row" />
 
             <LinearLayout
                 android:id="@+id/location_row"
