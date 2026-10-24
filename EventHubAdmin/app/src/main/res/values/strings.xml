@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">EventHub Admin</string>
+    <!-- Short enough to fit under the launcher icon without being cut -->
+    <string name="launcher_label">Admin</string>
 
     <string name="empty_title">No events yet</string>
     <string name="empty_message">Events you add appear here.</string>
