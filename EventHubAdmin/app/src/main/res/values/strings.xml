@@ -151,6 +151,8 @@
     <string name="error_start_time_required">Select the start time</string>
     <string name="error_end_time_required">Select the end time</string>
     <string name="error_end_time_same">End time must be different from the start time</string>
+    <!-- When an edit would leave sessions outside the event, with the times they run -->
+    <string name="error_end_time_sessions">Event must include its sessions, %1$s–%2$s</string>
     <string name="error_location_required">Enter the event location</string>
     <string name="error_organizer_required">Enter the event organizer</string>
     <string name="error_email_format">Enter an email address like name@example.com</string>

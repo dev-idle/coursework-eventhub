@@ -392,6 +392,15 @@ public class AddEditEventActivity extends AppCompatActivity {
                 name.getValue(), date.getValue(), id, database.getAllEvents())) {
             nameLayout.setError(getString(R.string.error_name_duplicate));
         }
+        if (eventToEdit != null && startTime.isValid() && endTime.isValid()) {
+            List<Session> sessions = database.getSessions(eventToEdit);
+            if (!EventValidator.fitsSessions(
+                    sessions, startTime.getValue(), endTime.getValue())) {
+                endTimeLayout.setError(getString(R.string.error_end_time_sessions,
+                        EventTimes.format(sessions.get(0).getStartTime()),
+                        EventTimes.format(lastSessionEnd(sessions))));
+            }
+        }
 
         for (TextInputLayout layout : allLayouts()) {
             if (layout.getError() != null) {
@@ -430,6 +439,19 @@ public class AddEditEventActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, new Intent().putExtra(EXTRA_EVENT_ID, id));
         finish();
+    }
+
+    /** Returns when the last of the sessions ends, counted from the event's saved start. */
+    private LocalTime lastSessionEnd(List<Session> sessions) {
+        LocalTime from = eventToEdit.getStartTime();
+        LocalTime last = sessions.get(0).getEndTime();
+        for (Session session : sessions) {
+            if (EventTimes.minutesBetween(from, session.getEndTime())
+                    > EventTimes.minutesBetween(from, last)) {
+                last = session.getEndTime();
+            }
+        }
+        return last;
     }
 
     private String dateError(EventValidator.Reason reason) {

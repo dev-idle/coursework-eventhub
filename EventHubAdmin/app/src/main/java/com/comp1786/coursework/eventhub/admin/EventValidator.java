@@ -127,6 +127,16 @@ public final class EventValidator {
         return false;
     }
 
+    /** Returns true if every session still falls between the event's new start and end. */
+    public static boolean fitsSessions(List<Session> sessions, LocalTime start, LocalTime end) {
+        for (Session session : sessions) {
+            if (!EventTimes.isWithin(session.getStartTime(), session.getEndTime(), start, end)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** Either a valid value or the reason it was rejected. */
     public static final class Result<T> {
 
