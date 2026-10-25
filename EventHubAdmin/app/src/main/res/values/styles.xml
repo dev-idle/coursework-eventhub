@@ -93,6 +93,11 @@
         <item name="android:colorControlActivated">?attr/colorPrimary</item>
     </style>
 
+    <!-- The search field sits in the app bar without an underline, as its title does. -->
+    <style name="Widget.EventHubAdmin.SearchView" parent="Widget.AppCompat.SearchView">
+        <item name="queryBackground">@null</item>
+    </style>
+
     <!-- Opens below its button and ends under its dots, on the 16dp keyline. -->
     <style name="Widget.EventHubAdmin.OverflowMenu" parent="Widget.Material3.PopupMenu.Overflow">
         <item name="overlapAnchor">false</item>

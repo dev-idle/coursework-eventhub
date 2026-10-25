@@ -11,6 +11,9 @@
     </plurals>
     <string name="empty_filtered_title">No matching events</string>
     <string name="empty_filtered_message">Clear a filter to see more events.</string>
+    <string name="empty_search_message">Check the spelling, or try fewer letters.</string>
+    <string name="menu_search">Search</string>
+    <string name="hint_search_events">Search events</string>
     <string name="filter_date">Date</string>
     <string name="filter_organizer">Organizer</string>
     <string name="filter_status">Status</string>

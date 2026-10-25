@@ -214,6 +214,9 @@ public class EventDatabase extends SQLiteOpenHelper {
     public List<Event> getEvents(EventFilter filter) {
         List<String> conditions = new ArrayList<>();
         List<String> args = new ArrayList<>();
+        if (!filter.getText().isEmpty()) {
+            addWordStart(conditions, args, filter.getText(), "Name", "Description");
+        }
         if (filter.getDate() != null) {
             conditions.add("Date = ?");
             args.add(filter.getDate().toString());
@@ -322,6 +325,20 @@ public class EventDatabase extends SQLiteOpenHelper {
             }
         }
         return counts;
+    }
+
+    /** Keeps the rows where a word in one of the columns starts with the text, in any case. */
+    private static void addWordStart(List<String> conditions, List<String> args, String text,
+            String... columns) {
+        // Typed wildcards are escaped, so % and _ match only themselves.
+        String start = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        List<String> matches = new ArrayList<>();
+        for (String column : columns) {
+            matches.add(column + " LIKE ? ESCAPE '\\' OR " + column + " LIKE ? ESCAPE '\\'");
+            args.add(start + "%");
+            args.add("% " + start + "%");
+        }
+        conditions.add("(" + String.join(" OR ", matches) + ")");
     }
 
     /** Returns the organizers of the saved events, for the organizer filter. */

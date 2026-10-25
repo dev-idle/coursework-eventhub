@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.ListPopupWindow;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -65,6 +66,10 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     private EventFilter filter;
     private AlertDialog deleteDialog;
     private ListPopupWindow moreMenu;
+    @Nullable
+    private MenuItem searchItem;
+    @Nullable
+    private MenuItem moreItem;
     // Set while another screen opens, so a quick second tap does not open it twice.
     private boolean opening;
 
@@ -185,21 +190,22 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(
-                adapter.isSelecting() ? R.menu.menu_selection : R.menu.menu_more, menu);
-        MenuItem more = menu.findItem(R.id.action_more);
-        if (more != null) {
-            // A button set as an action view does not call onOptionsItemSelected by itself.
-            more.getActionView().setOnClickListener(v -> onOptionsItemSelected(more));
+                adapter.isSelecting() ? R.menu.menu_selection : R.menu.menu_main, menu);
+        searchItem = menu.findItem(R.id.action_search);
+        moreItem = menu.findItem(R.id.action_more);
+        if (searchItem != null) {
+            setUpSearch(searchItem);
         }
+        if (moreItem != null) {
+            // A button set as an action view does not call onOptionsItemSelected by itself.
+            moreItem.getActionView().setOnClickListener(v -> onOptionsItemSelected(moreItem));
+        }
+        showAppBarButtons();
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem more = menu.findItem(R.id.action_more);
-        if (more != null) {
-            more.setVisible(adapter.getItemCount() > 0);
-        }
         MenuItem selectAll = menu.findItem(R.id.action_select_all);
         if (selectAll != null) {
             // Like the check box over a table: empty, partly filled, or checked once all are.
@@ -284,6 +290,47 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         emptyTitle = findViewById(R.id.empty_title);
         emptyMessage = findViewById(R.id.empty_message);
         addButton = findViewById(R.id.add_button);
+    }
+
+    /** Shows search with the filters while events are saved, and More while cards are shown. */
+    private void showAppBarButtons() {
+        if (searchItem != null) {
+            searchItem.setVisible(filterBar.getVisibility() == View.VISIBLE);
+        }
+        if (moreItem != null) {
+            moreItem.setVisible(adapter.getItemCount() > 0);
+        }
+    }
+
+    /** Searches as the user types, and reopens the search the list is still narrowed to. */
+    private void setUpSearch(MenuItem item) {
+        SearchView searchView = (SearchView) item.getActionView();
+        searchView.setQueryHint(getString(R.string.hint_search_events));
+        searchView.setMaxWidth(Integer.MAX_VALUE);
+        // After rotation, or once selecting ends, the field shows the text searched for.
+        if (!filter.getText().isEmpty()) {
+            item.expandActionView();
+            searchView.setQuery(filter.getText(), false);
+            searchView.clearFocus();
+        }
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchView.clearFocus();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // Called with no text as the field closes, which it also does when selecting
+                // starts, and selecting keeps the list as it is.
+                if (!adapter.isSelecting()) {
+                    filter.setText(newText);
+                    showEvents();
+                }
+                return true;
+            }
+        });
     }
 
     /** Opens each filter's choices, and clears a chosen one from its close button. */
@@ -419,6 +466,9 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     private void scrollToEvent(long id) {
         if (adapter.positionOf(id) == RecyclerView.NO_POSITION && !filter.isEmpty()) {
             filter = new EventFilter();
+            if (searchItem != null) {
+                searchItem.collapseActionView();
+            }
             showEvents();
         }
         eventList.scrollToPosition(adapter.positionOf(id));
@@ -523,6 +573,9 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         if (nothingSaved) {
             // The filters hide while nothing is saved, so the list goes back to every event.
             filter = new EventFilter();
+            if (searchItem != null) {
+                searchItem.collapseActionView();
+            }
         }
         showFilters();
         List<Event> events = database.getEvents(filter);
@@ -532,8 +585,9 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         boolean empty = events.isEmpty();
         emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
         emptyTitle.setText(filter.isEmpty() ? R.string.empty_title : R.string.empty_filtered_title);
-        emptyMessage.setText(
-                filter.isEmpty() ? R.string.empty_message : R.string.empty_filtered_message);
+        emptyMessage.setText(filter.isEmpty() ? R.string.empty_message
+                : filter.getText().isEmpty() ? R.string.empty_filtered_message
+                : R.string.empty_search_message);
         if (empty) {
             // The button may still be shrunk from scrolling, and the empty state needs its label.
             addButton.extend();
@@ -546,8 +600,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
             // Events no longer shown were deselected, so the number selected may have changed.
             showSelection();
         } else {
-            // The More options button shows only while there are cards to select.
-            invalidateOptionsMenu();
+            // Set in place, as rebuilding the menu would close the search field.
+            showAppBarButtons();
         }
     }
 }

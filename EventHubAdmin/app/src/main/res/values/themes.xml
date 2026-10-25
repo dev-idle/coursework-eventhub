@@ -42,6 +42,7 @@
         <item name="snackbarStyle">@style/Widget.EventHubAdmin.Snackbar</item>
         <item name="snackbarTextViewStyle">@style/Widget.EventHubAdmin.Snackbar.TextView</item>
         <item name="snackbarButtonStyle">@style/Widget.EventHubAdmin.Snackbar.Button</item>
+        <item name="searchViewStyle">@style/Widget.EventHubAdmin.SearchView</item>
         <!-- The header tone, drawn once through the window, behind the cards and the forms. -->
         <item name="android:windowBackground">@color/list_background</item>
     </style>
