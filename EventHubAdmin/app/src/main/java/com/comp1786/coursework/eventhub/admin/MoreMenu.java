@@ -6,10 +6,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Checkable;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.widget.ListPopupWindow;
 
@@ -25,12 +27,17 @@ public final class MoreMenu {
 
     /** Shows the items under the anchor and returns the menu, to close along with the screen. */
     public static ListPopupWindow show(Context context, View anchor, Item... items) {
+        return show(context, anchor, Gravity.END, items);
+    }
+
+    /** Shows the items under the anchor, lined up with its start or end as the gravity says. */
+    public static ListPopupWindow show(Context context, View anchor, int gravity, Item... items) {
         ItemAdapter adapter = new ItemAdapter(items);
         ListPopupWindow menu = new ListPopupWindow(
                 context, null, androidx.appcompat.R.attr.actionOverflowMenuStyle);
         menu.setAdapter(adapter);
         menu.setAnchorView(anchor);
-        menu.setDropDownGravity(Gravity.END);
+        menu.setDropDownGravity(gravity);
         menu.setContentWidth(adapter.widestItem(anchor));
         menu.setModal(true);
         menu.setOnItemClickListener((parent, view, position, id) -> {
@@ -55,13 +62,27 @@ public final class MoreMenu {
         private final int layoutRes;
         @StringRes
         private final int titleRes;
+        // Set instead of the title resource for a title that is not a resource, such as a name.
+        @Nullable
+        private final CharSequence title;
         private final Runnable onClick;
-        // Kept for an item with a switch, as the list may show the item again.
+        // Kept for an item with a switch or a tick, as the list may show the item again.
         private boolean checked;
 
         public Item(@LayoutRes int layoutRes, @StringRes int titleRes, Runnable onClick) {
             this.layoutRes = layoutRes;
             this.titleRes = titleRes;
+            title = null;
+            this.onClick = onClick;
+        }
+
+        /** Makes one of several choices, ticked if it is the chosen one. */
+        public Item(@LayoutRes int layoutRes, CharSequence title, boolean checked,
+                Runnable onClick) {
+            this.layoutRes = layoutRes;
+            titleRes = 0;
+            this.title = title;
+            this.checked = checked;
             this.onClick = onClick;
         }
 
@@ -70,6 +91,7 @@ public final class MoreMenu {
                 Consumer<Boolean> onCheckedChange) {
             this.layoutRes = layoutRes;
             this.titleRes = titleRes;
+            title = null;
             this.checked = checked;
             onClick = () -> {
                 this.checked = !this.checked;
@@ -118,9 +140,14 @@ public final class MoreMenu {
             TextView view = convertView != null ? (TextView) convertView
                     : (TextView) LayoutInflater.from(parent.getContext())
                             .inflate(items[position].layoutRes, parent, false);
-            view.setText(items[position].titleRes);
-            if (view instanceof CompoundButton) {
-                ((CompoundButton) view).setChecked(items[position].checked);
+            Item item = items[position];
+            if (item.title != null) {
+                view.setText(item.title);
+            } else {
+                view.setText(item.titleRes);
+            }
+            if (view instanceof Checkable) {
+                ((Checkable) view).setChecked(item.checked);
             }
             return view;
         }

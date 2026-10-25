@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The tick at the end of a chosen menu item, with the gap before it -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/ic_check"
+        android:start="@dimen/menu_control_padding" />
+</layer-list>

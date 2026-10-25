@@ -2,6 +2,7 @@ package com.comp1786.coursework.eventhub.admin;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,7 +20,6 @@ import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.ListPopupWindow;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -66,7 +66,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     // Kept across rotation but not saved, so a new launch shows every saved event.
     private EventFilter filter;
     private AlertDialog deleteDialog;
-    private ListPopupWindow moreMenu;
+    // The More or filter menu that is open, closed along with the screen.
+    private ListPopupWindow openMenu;
     @Nullable
     private MenuItem searchItem;
     // Set while another screen opens, so a quick second tap does not open it twice.
@@ -191,8 +192,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         if (deleteDialog != null) {
             deleteDialog.dismiss();
         }
-        if (moreMenu != null) {
-            moreMenu.dismiss();
+        if (openMenu != null) {
+            openMenu.dismiss();
         }
         database.close();
         super.onDestroy();
@@ -320,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                 this::uploadEvents));
         items.add(new MoreMenu.Item(R.layout.item_menu_sync, R.string.menu_sync,
                 CloudSync.isAutoSync(this), on -> CloudSync.setAutoSync(this, on)));
-        moreMenu = MoreMenu.show(this, anchor, items.toArray(new MoreMenu.Item[0]));
+        openMenu = MoreMenu.show(this, anchor, items.toArray(new MoreMenu.Item[0]));
     }
 
     /** Uploads every saved event at once, after checking that the device is online. */
@@ -422,40 +423,32 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
 
     /** Lists the organizers of the saved events, so one is chosen rather than typed. */
     private void showOrganizerMenu() {
-        PopupMenu menu = new PopupMenu(this, organizerFilter);
         List<String> organizers = database.getOrganizers();
-        for (String organizer : organizers) {
-            menu.getMenu().add(organizer);
+        MoreMenu.Item[] items = new MoreMenu.Item[organizers.size()];
+        for (int i = 0; i < items.length; i++) {
+            String organizer = organizers.get(i);
+            items[i] = new MoreMenu.Item(R.layout.item_menu_choice, organizer,
+                    organizer.equals(filter.getOrganizer()), () -> {
+                        filter.setOrganizer(organizer);
+                        showEvents();
+                    });
         }
-        // One choice at a time, with the chosen one marked.
-        menu.getMenu().setGroupCheckable(Menu.NONE, true, true);
-        int chosen = organizers.indexOf(filter.getOrganizer());
-        if (chosen >= 0) {
-            menu.getMenu().getItem(chosen).setChecked(true);
-        }
-        menu.setOnMenuItemClickListener(item -> {
-            filter.setOrganizer(item.getTitle().toString());
-            showEvents();
-            return true;
-        });
-        menu.show();
+        openMenu = MoreMenu.show(this, organizerFilter, Gravity.START, items);
     }
 
+    /** Lists the statuses under their chip, with the chosen one ticked. */
     private void showStatusMenu() {
-        PopupMenu menu = new PopupMenu(this, statusFilter);
-        for (EventStatus status : EventStatus.values()) {
-            menu.getMenu().add(Menu.NONE, status.ordinal(), Menu.NONE, status.getLabelRes());
+        EventStatus[] statuses = EventStatus.values();
+        MoreMenu.Item[] items = new MoreMenu.Item[statuses.length];
+        for (int i = 0; i < statuses.length; i++) {
+            EventStatus status = statuses[i];
+            items[i] = new MoreMenu.Item(R.layout.item_menu_choice,
+                    getString(status.getLabelRes()), status == filter.getStatus(), () -> {
+                        filter.setStatus(status);
+                        showEvents();
+                    });
         }
-        menu.getMenu().setGroupCheckable(Menu.NONE, true, true);
-        if (filter.getStatus() != null) {
-            menu.getMenu().findItem(filter.getStatus().ordinal()).setChecked(true);
-        }
-        menu.setOnMenuItemClickListener(item -> {
-            filter.setStatus(EventStatus.values()[item.getItemId()]);
-            showEvents();
-            return true;
-        });
-        menu.show();
+        openMenu = MoreMenu.show(this, statusFilter, Gravity.START, items);
     }
 
     /** Shows each filter's label, or its chosen value with a button that clears it. */

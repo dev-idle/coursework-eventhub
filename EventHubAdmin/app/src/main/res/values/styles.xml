@@ -119,6 +119,13 @@
         <item name="drawableTint">?attr/colorOnSurfaceVariant</item>
     </style>
 
+    <!-- One of the choices of a filter, with a tick at its end once chosen -->
+    <style name="Widget.EventHubAdmin.MenuChoice" parent="Widget.EventHubAdmin.MenuItem">
+        <item name="android:checkMarkTint">@color/menu_check</item>
+        <item name="android:paddingStart">@dimen/screen_padding</item>
+        <item name="android:paddingEnd">@dimen/screen_padding</item>
+    </style>
+
     <!-- A menu item with a switch at its end, 44 by 26dp to sit with the text and icons -->
     <style name="Widget.EventHubAdmin.MenuSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
         <item name="android:background">@null</item>
@@ -132,7 +139,7 @@
         <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:thumb">@drawable/bg_switch_thumb</item>
-        <item name="switchPadding">@dimen/menu_switch_padding</item>
+        <item name="switchPadding">@dimen/menu_control_padding</item>
         <item name="track">@drawable/bg_switch_track</item>
         <item name="trackDecoration">@drawable/bg_switch_track_outline</item>
     </style>
