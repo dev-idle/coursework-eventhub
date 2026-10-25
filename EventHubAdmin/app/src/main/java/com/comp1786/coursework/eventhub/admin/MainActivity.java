@@ -138,6 +138,14 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                     addButton.extend();
                 }
             }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                // Dragging the list puts the keyboard away, keeping the search and its results.
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING && searchItem != null) {
+                    searchItem.getActionView().clearFocus();
+                }
+            }
         });
         addButton.setOnClickListener(v -> openAddEvent());
     }
