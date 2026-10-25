@@ -38,6 +38,10 @@
             android:exported="false"
             android:label="@string/title_sessions" />
         <activity
+            android:name=".SessionDetailsActivity"
+            android:exported="false"
+            android:label="@string/title_session_details" />
+        <activity
             android:name=".EventDetailsActivity"
             android:exported="false"
             android:label="@string/title_event_details" />

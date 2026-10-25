@@ -195,12 +195,6 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- Event details screen -->
-    <style name="Widget.EventHubAdmin.DetailLabel" parent="">
-        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
-    </style>
-
     <!-- A card on the header tone, with the corners of the event cards. -->
     <style name="Widget.EventHubAdmin.DetailCard" parent="">
         <item name="android:background">@drawable/bg_detail_card</item>

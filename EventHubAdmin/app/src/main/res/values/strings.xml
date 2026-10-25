@@ -57,6 +57,8 @@
     <string name="description_time_range">From %1$s to %2$s, %3$s</string>
     <string name="description_time_range_next_day">From %1$s to %2$s the next day, %3$s</string>
     <string name="description_location">Location: %1$s</string>
+    <string name="description_speaker">Speaker: %1$s</string>
+    <string name="description_room">Room: %1$s</string>
     <string name="description_organizer">Organizer: %1$s</string>
     <string name="button_add_event">Add event</string>
     <string name="message_event_added">Event added</string>
@@ -102,6 +104,8 @@
     <string name="menu_more">More options</string>
     <string name="menu_edit">Edit event</string>
     <string name="menu_delete">Delete event</string>
+    <string name="menu_edit_session">Edit session</string>
+    <string name="menu_delete_session">Delete session</string>
     <string name="label_name">Event name</string>
     <string name="label_description">Event description</string>
     <string name="label_date">Event date</string>
@@ -165,6 +169,7 @@
 
     <!-- Sessions within an event -->
     <string name="title_sessions">Sessions</string>
+    <string name="title_session_details">Session details</string>
     <string name="title_add_session">Add session</string>
     <string name="title_edit_session">Edit session</string>
     <string name="button_add_session">Add session</string>
@@ -173,8 +178,6 @@
     <string name="sessions_empty_message">Sessions you add appear here.</string>
     <!-- The next session to start, such as "Next: 09:00 Opening keynote" -->
     <string name="next_session">Next: %1$s %2$s</string>
-    <!-- When a session is, such as "Friday 6 November 2026, 09:00–10:00 (1 hr)" -->
-    <string name="session_when">%1$s, %2$s–%3$s (%4$s)</string>
     <!-- The event a session belongs to, with its time, such as "Tech talks · 09:00–17:30" -->
     <string name="session_event">%1$s · %2$s–%3$s</string>
     <string name="label_session_name">Session name</string>

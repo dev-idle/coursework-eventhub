@@ -80,10 +80,12 @@ public class EventDatabase extends SQLiteOpenHelper {
             + "StartTime, EndTime, Type, Speaker, Room, Description, ID) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_SESSION = "DELETE FROM Session WHERE ID = ?";
+    private static final String SELECT_SESSION = "SELECT ID, EventID, Name, StartTime, "
+            + "EndTime, Type, Speaker, Room, Description FROM Session ";
     // Sessions that start before the event's start time are on the next day, so they go last.
-    private static final String SELECT_SESSIONS = "SELECT ID, EventID, Name, StartTime, "
-            + "EndTime, Type, Speaker, Room, Description FROM Session WHERE EventID = ? "
-            + "ORDER BY StartTime < ?, StartTime, ID";
+    private static final String SELECT_SESSIONS = SELECT_SESSION
+            + "WHERE EventID = ? ORDER BY StartTime < ?, StartTime, ID";
+    private static final String SELECT_SESSION_BY_ID = SELECT_SESSION + "WHERE ID = ?";
     private static final String COUNT_SESSIONS =
             "SELECT EventID, COUNT(*) FROM Session GROUP BY EventID";
     // An event ends on the next day when its end time is not after its start time.
@@ -264,6 +266,15 @@ public class EventDatabase extends SQLiteOpenHelper {
         }
     }
 
+    /** Returns the saved session with this ID, or null if there is none. */
+    @Nullable
+    public Session getSession(long id) {
+        try (Cursor cursor = getReadableDatabase()
+                .rawQuery(SELECT_SESSION_BY_ID, new String[] {String.valueOf(id)})) {
+            return cursor.moveToFirst() ? readSession(cursor) : null;
+        }
+    }
+
     /** Returns the sessions of an event in the order they take place. */
     public List<Session> getSessions(Event event) {
         List<Session> sessions = new ArrayList<>();
@@ -325,7 +336,7 @@ public class EventDatabase extends SQLiteOpenHelper {
         statement.bindString(11, event.getContactPhone());
     }
 
-    /** Reads the session in the cursor's current row, in the column order of SELECT_SESSIONS. */
+    /** Reads the session in the cursor's current row, in the column order of SELECT_SESSION. */
     private static Session readSession(Cursor cursor) {
         return new Session(cursor.getLong(0), cursor.getLong(1), cursor.getString(2),
                 EventTimes.parse(cursor.getString(3)), EventTimes.parse(cursor.getString(4)),
