@@ -178,8 +178,8 @@
     <string name="sessions_empty_message">Sessions you add appear here.</string>
     <!-- The next session to start, such as "Next: 09:00 Opening keynote" -->
     <string name="next_session">Next: %1$s %2$s</string>
-    <!-- The event a session belongs to, with its time, such as "Tech talks · 09:00–17:30" -->
-    <string name="session_event">%1$s · %2$s–%3$s</string>
+    <!-- The event's hours, under a session's start time -->
+    <string name="session_hours">Between %1$s and %2$s</string>
     <string name="label_session_name">Session name</string>
     <string name="label_session_description">Session description</string>
     <string name="label_speaker">Speaker</string>
