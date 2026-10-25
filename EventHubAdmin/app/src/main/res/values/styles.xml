@@ -93,9 +93,11 @@
         <item name="android:colorControlActivated">?attr/colorPrimary</item>
     </style>
 
-    <!-- The search field sits in the app bar without an underline, as its title does. -->
+    <!-- The search field sits in the app bar like its title: no underline, and a plain hint
+         with the cursor just before it, as the search button already shows the icon. -->
     <style name="Widget.EventHubAdmin.SearchView" parent="Widget.AppCompat.SearchView">
         <item name="queryBackground">@null</item>
+        <item name="searchHintIcon">@null</item>
     </style>
 
     <!-- Opens below its button and ends under its dots, on the 16dp keyline. -->
