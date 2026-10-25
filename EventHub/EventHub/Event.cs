@@ -53,9 +53,11 @@ namespace EventHub
         [JsonProperty("sessions")]
         public Dictionary<string, Session> Sessions { get; set; } = new();
 
+        [JsonIgnore]
         public DateTime Start => ToDateTime(Date, StartTime);
 
         // An event ends on the next day when its end time is not after its start time.
+        [JsonIgnore]
         public DateTime End
         {
             get
@@ -65,10 +67,22 @@ namespace EventHub
             }
         }
 
+        [JsonIgnore]
         public bool IsCancelled => Status == "CANCELLED";
 
         // False for an event whose date or times cannot be read, which the list leaves out.
+        [JsonIgnore]
         public bool HasValidTimes => IsDateTime(Date, StartTime) && IsDateTime(Date, EndTime);
+
+        // Sets the keys of the event and its sessions, which the cloud sends apart from the values
+        public void SetKeys(string key)
+        {
+            Key = key;
+            foreach (var session in Sessions)
+            {
+                session.Value.Key = session.Key;
+            }
+        }
 
         public static DateTime ToDateTime(string date, string time) =>
             DateTime.ParseExact($"{date} {time}", "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);

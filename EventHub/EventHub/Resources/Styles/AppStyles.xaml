@@ -77,6 +77,23 @@
         <Setter Property="VerticalOptions" Value="Fill" />
     </Style>
 
+    <!-- Marks a favorite event on its card -->
+    <Style x:Key="FavoriteStar" TargetType="Path" BasedOn="{StaticResource Icon}">
+        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="HeightRequest" Value="20" />
+        <Setter Property="VerticalOptions" Value="Start" />
+        <Setter Property="WidthRequest" Value="20" />
+    </Style>
+
+    <!-- A line of news above the list, such as being offline -->
+    <Style x:Key="Notice" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceContainerHighest}, Dark={StaticResource SurfaceContainerHighestDark}}" />
+        <Setter Property="Margin" Value="16,8,16,0" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+
     <!-- Menus, with the color and shadow of the admin app's -->
     <Style x:Key="Menu" TargetType="Border">
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Menu}, Dark={StaticResource MenuDark}}" />

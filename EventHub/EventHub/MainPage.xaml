@@ -6,7 +6,7 @@
              Title="Events"
              Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="64,Auto,Auto,*">
+    <Grid RowDefinitions="64,Auto,Auto,Auto,*">
         <!-- The app's name, large as in the admin app, with a button that turns the row into
              a search field of the same height, so nothing below moves -->
         <Grid x:Name="titleBar" ColumnDefinitions="*,Auto" Padding="0,0,4,0">
@@ -54,13 +54,23 @@
                Style="{StaticResource Count}"
                IsVisible="False" />
 
-        <!-- One chip per filter, in the order a card shows the date, type and status -->
+        <!-- The favorites, then one chip per filter in the order a card shows the date, type and status -->
         <ScrollView x:Name="filterBar"
                     Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalScrollBarVisibility="Never"
                     IsVisible="False">
             <HorizontalStackLayout Padding="16,8,16,4" Spacing="8">
+                <!-- Turned on and off, so it has no cross -->
+                <Border x:Name="favoritesChip" Style="{StaticResource Chip}" Padding="8,0,12,0">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFavoritesChipTapped" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="8">
+                        <Path x:Name="favoritesChipIcon" Style="{StaticResource SmallIcon}" VerticalOptions="Center" />
+                        <Label x:Name="favoritesChipText" Text="Favorites" Style="{StaticResource ChipText}" />
+                    </HorizontalStackLayout>
+                </Border>
                 <Border x:Name="dateChip" Style="{StaticResource Chip}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnDateChipTapped" />
@@ -112,13 +122,28 @@
             </HorizontalStackLayout>
         </ScrollView>
 
+        <!-- Shown while offline, above the favorites saved on the phone -->
+        <Border x:Name="offlineNotice" Grid.Row="3" Style="{StaticResource Notice}" IsVisible="False">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                <Path Data="{StaticResource IconCloudOff}"
+                      Style="{StaticResource Icon}"
+                      WidthRequest="20"
+                      HeightRequest="20" />
+                <Label Grid.Column="1"
+                       Text="Offline. Showing the favorites saved on this phone."
+                       Style="{StaticResource CardText}"
+                       VerticalTextAlignment="Center" />
+            </Grid>
+        </Border>
+
         <!-- The events by month, as cards like the admin app's -->
         <CollectionView x:Name="eventList"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         IsGrouped="True"
                         Margin="0,4,0,0"
                         VerticalScrollBarVisibility="Never"
                         Scrolled="OnListScrolled">
+
             <CollectionView.GroupHeaderTemplate>
                 <DataTemplate x:DataType="local:MonthGroup">
                     <Label Text="{Binding Name}"
@@ -157,10 +182,17 @@
                                 </Grid>
 
                                 <VerticalStackLayout Grid.Column="1" Padding="16,12,16,16">
-                                    <Label Text="{Binding Name}"
-                                           Style="{StaticResource CardName}"
-                                           TextColor="{Binding TextColor}"
-                                           TextDecorations="{Binding NameDecorations}" />
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Text="{Binding Name}"
+                                               Style="{StaticResource CardName}"
+                                               TextColor="{Binding TextColor}"
+                                               TextDecorations="{Binding NameDecorations}" />
+                                        <Path Grid.Column="1"
+                                              Data="{StaticResource IconStar}"
+                                              Style="{StaticResource FavoriteStar}"
+                                              IsVisible="{Binding IsFavorite}"
+                                              SemanticProperties.Description="Favorite" />
+                                    </Grid>
 
                                     <HorizontalStackLayout Spacing="8" Margin="0,6,0,0">
                                         <Border Style="{StaticResource TypeLabel}"
@@ -219,14 +251,14 @@
         </CollectionView>
 
         <ActivityIndicator x:Name="loadingIndicator"
-                           Grid.Row="3"
+                           Grid.Row="4"
                            IsRunning="True"
                            HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Shown when no event is in the cloud, or the events cannot be read -->
         <VerticalStackLayout x:Name="messageView"
-                             Grid.Row="3"
+                             Grid.Row="4"
                              Padding="24,0"
                              Spacing="4"
                              VerticalOptions="Center"
@@ -247,7 +279,7 @@
         </VerticalStackLayout>
 
         <!-- A filter's choices under its chip, closed by a tap anywhere else, like the admin app's menus -->
-        <Grid x:Name="menuLayer" Grid.RowSpan="4" IsVisible="False">
+        <Grid x:Name="menuLayer" Grid.RowSpan="5" IsVisible="False">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnMenuLayerTapped" />
             </Grid.GestureRecognizers>

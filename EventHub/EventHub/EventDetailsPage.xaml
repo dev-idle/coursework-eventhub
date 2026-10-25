@@ -6,7 +6,7 @@
              Shell.NavBarIsVisible="False">
 
     <Grid RowDefinitions="64,*">
-        <Grid ColumnDefinitions="Auto,*" Padding="4,0">
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="4,0">
             <Grid Style="{StaticResource IconButton}" SemanticProperties.Description="Back">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
@@ -17,6 +17,13 @@
                    Text="Event details"
                    Style="{StaticResource BarTitle}"
                    SemanticProperties.HeadingLevel="Level1" />
+            <!-- Adds the event to the favorites, or takes it off -->
+            <Grid x:Name="favoriteButton" Grid.Column="2" Style="{StaticResource IconButton}">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFavoriteTapped" />
+                </Grid.GestureRecognizers>
+                <Path x:Name="favoriteIcon" Style="{StaticResource BarIcon}" />
+            </Grid>
         </Grid>
 
         <ScrollView Grid.Row="1">

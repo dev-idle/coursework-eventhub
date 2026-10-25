@@ -17,11 +17,12 @@ namespace EventHub
     {
         public static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-GB");
 
-        public EventCard(Event e, CardState state, DateTime now)
+        public EventCard(Event e, CardState state, DateTime now, bool isFavorite)
         {
             Event = e;
             State = state;
             StatusText = GetStatusText(e, state, now.Date);
+            IsFavorite = isFavorite;
         }
 
         public Event Event { get; }
@@ -29,6 +30,8 @@ namespace EventHub
         public CardState State { get; }
 
         public string StatusText { get; }
+
+        public bool IsFavorite { get; }
 
         public string Name => Event.Name;
 

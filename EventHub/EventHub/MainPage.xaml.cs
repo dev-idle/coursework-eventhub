@@ -18,6 +18,10 @@ namespace EventHub
 
         // Every event in the cloud by key, kept up to date as the admin app changes them
         private readonly Dictionary<string, Event> events = new();
+        private readonly FavoriteDatabase favorites;
+        private HashSet<string> favoriteKeys = new();
+        // Set while the events shown are the favorites saved on the phone, as it is offline
+        private bool savedOnly;
         private readonly ObservableCollection<MonthGroup> months = new();
         private IDisposable? subscription;
         private bool loaded;
@@ -32,11 +36,17 @@ namespace EventHub
         private DateTime? dateFilter;
         private string? typeFilter;
         private string? statusFilter;
+        private bool favoritesOnly;
 
         public MainPage()
         {
             InitializeComponent();
             eventList.ItemsSource = months;
+            // Store the favorites in the application folder
+            string dbPath = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "favorites.db");
+            favorites = new FavoriteDatabase(dbPath);
+            favoriteKeys = favorites.GetKeys();
             // The cards take their colors from the theme, so they are shown again when it changes
             Application.Current!.RequestedThemeChanged += (sender, e) => ShowEvents();
         }
@@ -47,6 +57,8 @@ namespace EventHub
             opening = false;
             Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
             Window.Resumed += OnWindowResumed;
+            // The details page adds and removes favorites
+            favoriteKeys = favorites.GetKeys();
             if (loaded)
             {
                 // The states and countdowns change as time passes
@@ -94,7 +106,7 @@ namespace EventHub
             if (!opening && (sender as BindableObject)?.BindingContext is EventCard card)
             {
                 opening = true;
-                await Navigation.PushAsync(new EventDetailsPage(card));
+                await Navigation.PushAsync(new EventDetailsPage(card, favorites));
             }
         }
 
@@ -170,6 +182,12 @@ namespace EventHub
             {
                 await searchEntry.HideSoftInputAsync(CancellationToken.None);
             }
+        }
+
+        private void OnFavoritesChipTapped(object? sender, TappedEventArgs e)
+        {
+            favoritesOnly = !favoritesOnly;
+            ShowEvents();
         }
 
         private void OnDateChipTapped(object? sender, TappedEventArgs e)
@@ -316,7 +334,7 @@ namespace EventHub
                 // Events read before the connection was lost stay on screen
                 if (!loaded)
                 {
-                    ShowMessage("No internet connection", "Connect to see the latest events.", true);
+                    ShowSavedEvents("No internet connection", "Connect to see the latest events.");
                 }
                 return;
             }
@@ -334,7 +352,7 @@ namespace EventHub
             {
                 if (!loaded)
                 {
-                    ShowMessage("Couldn't load the events", "Check your connection and try again.", true);
+                    ShowSavedEvents("Couldn't load the events", "Check your connection and try again.");
                 }
                 return;
             }
@@ -384,13 +402,12 @@ namespace EventHub
                     events.Clear();
                     foreach (var item in items)
                     {
-                        item.Object.Key = item.Key;
-                        foreach (var session in item.Object.Sessions)
-                        {
-                            session.Value.Key = session.Key;
-                        }
+                        item.Object.SetKeys(item.Key);
                         events[item.Key] = item.Object;
                     }
+                    favorites.UpdateEvents(events);
+                    favoriteKeys = favorites.GetKeys();
+                    savedOnly = false;
                     loaded = true;
                     ShowEvents();
                 } while (readAgain);
@@ -416,6 +433,7 @@ namespace EventHub
                 dateFilter = null;
                 typeFilter = null;
                 statusFilter = null;
+                favoritesOnly = false;
                 if (searchBar.IsVisible)
                 {
                     CloseSearch();
@@ -433,7 +451,8 @@ namespace EventHub
             {
                 months.Add(new MonthGroup(
                     month.Key.ToString("MMMM yyyy", EventCard.English).ToUpperInvariant(),
-                    month.Select(e => new EventCard(e, EventCard.GetState(e, now, nextStart), now))));
+                    month.Select(e => new EventCard(e, EventCard.GetState(e, now, nextStart), now,
+                        favoriteKeys.Contains(e.Key)))));
             }
 
             loadingIndicator.IsRunning = false;
@@ -443,15 +462,22 @@ namespace EventHub
             countLabel.IsVisible = all.Count > 0;
             filterBar.IsVisible = all.Count > 0;
             searchButton.IsVisible = all.Count > 0;
+            offlineNotice.IsVisible = savedOnly;
             ShowFilters();
             if (all.Count == 0)
             {
-                ShowMessage("No events yet", "Events appear here once they are published.", false);
+                ShowMessage("No events yet", "Events appear here once they are published.", null, false);
+            }
+            else if (favoritesOnly && favoriteKeys.Count == 0)
+            {
+                ShowMessage("No favorites yet", "Tap the star on an event to keep it here.",
+                    "IconStarOutline", false);
             }
             else if (shown.Count == 0)
             {
                 ShowMessage("No matching events", searchText.Length > 0
-                    ? "Check the spelling, or try fewer letters." : "Clear a filter to see more events.", false);
+                    ? "Check the spelling, or try fewer letters." : "Clear a filter to see more events.",
+                    null, false);
             }
             else
             {
@@ -467,7 +493,8 @@ namespace EventHub
                     || Search.StartsWord(e.Description, searchText))
                 && (dateFilter == null || e.Start.Date == dateFilter.Value.Date)
                 && (typeFilter == null || e.Type == typeFilter)
-                && (statusFilter == null || GetStatus(e, now) == statusFilter);
+                && (statusFilter == null || GetStatus(e, now) == statusFilter)
+                && (!favoritesOnly || favoriteKeys.Contains(e.Key));
         }
 
         // The status the admin app gives an event, completed once it has ended
@@ -478,6 +505,9 @@ namespace EventHub
 
         private void ShowFilters()
         {
+            ShowChipColors(favoritesChip, favoritesChipText, favoritesChipIcon, favoritesOnly);
+            favoritesChipIcon.Data = GetIcon(favoritesOnly ? "IconStar" : "IconStarOutline");
+            SemanticProperties.SetDescription(favoritesChip, favoritesOnly ? "Favorites, selected" : "Favorites");
             ShowChip(dateChip, dateChipText, dateChipIcon, "Date",
                 dateFilter?.ToString("dd/MM/yyyy", EventCard.English));
             ShowChip(typeChip, typeChipText, typeChipIcon, "Type",
@@ -489,13 +519,9 @@ namespace EventHub
         private static void ShowChip(Border chip, Label text, Path icon, string name, string? value)
         {
             bool chosen = value != null;
-            Color textColor = AppColors.Get(chosen ? "OnPrimaryContainer" : "OnSurfaceVariant");
-            chip.BackgroundColor = chosen ? AppColors.Get("PrimaryContainer") : Colors.Transparent;
-            chip.Stroke = new SolidColorBrush(AppColors.Get(chosen ? "PrimaryContainer" : "Outline"));
             text.Text = value ?? name;
-            text.TextColor = textColor;
-            icon.Data = (Geometry)Application.Current!.Resources[chosen ? "IconClose" : "IconDropDown"];
-            icon.Fill = new SolidColorBrush(textColor);
+            ShowChipColors(chip, text, icon, chosen);
+            icon.Data = GetIcon(chosen ? "IconClose" : "IconDropDown");
             // Read out for the cross, such as "Clear date"
             if (icon.Parent is BindableObject button)
             {
@@ -503,13 +529,52 @@ namespace EventHub
             }
         }
 
-        private void ShowMessage(string title, string text, bool canRetry)
+        // Colors a chip as on or off, as the admin app's filter chips are
+        private static void ShowChipColors(Border chip, Label text, Path icon, bool on)
+        {
+            Color textColor = AppColors.Get(on ? "OnPrimaryContainer" : "OnSurfaceVariant");
+            chip.BackgroundColor = on ? AppColors.Get("PrimaryContainer") : Colors.Transparent;
+            chip.Stroke = new SolidColorBrush(AppColors.Get(on ? "PrimaryContainer" : "Outline"));
+            text.TextColor = textColor;
+            icon.Fill = new SolidColorBrush(textColor);
+        }
+
+        private static Geometry GetIcon(string key)
+        {
+            return (Geometry)Application.Current!.Resources[key];
+        }
+
+        // Shows the favorites saved on the phone when the cloud cannot be read, or else the message
+        private void ShowSavedEvents(string title, string text)
+        {
+            List<Event> saved = favorites.GetEvents();
+            if (saved.Count == 0)
+            {
+                ShowMessage(title, text, "IconCloudOff", true);
+                return;
+            }
+            events.Clear();
+            foreach (Event e in saved)
+            {
+                events[e.Key] = e;
+            }
+            savedOnly = true;
+            favoritesOnly = true;
+            loaded = true;
+            ShowEvents();
+        }
+
+        private void ShowMessage(string title, string text, string? iconKey, bool canRetry)
         {
             loadingIndicator.IsRunning = false;
             loadingIndicator.IsVisible = false;
             messageTitle.Text = title;
             messageText.Text = text;
-            messageIcon.IsVisible = canRetry;
+            messageIcon.IsVisible = iconKey != null;
+            if (iconKey != null)
+            {
+                messageIcon.Data = GetIcon(iconKey);
+            }
             retryButton.IsVisible = canRetry;
             messageView.IsVisible = true;
         }

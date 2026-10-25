@@ -1,14 +1,20 @@
+using Microsoft.Maui.Controls.Shapes;
+
 namespace EventHub
 {
     public partial class EventDetailsPage : ContentPage
     {
         private readonly EventCard card;
+        private readonly FavoriteDatabase favorites;
+        private bool isFavorite;
 
         // The card that was tapped, so the details show the status it showed
-        public EventDetailsPage(EventCard card)
+        public EventDetailsPage(EventCard card, FavoriteDatabase favorites)
         {
             InitializeComponent();
             this.card = card;
+            this.favorites = favorites;
+            isFavorite = favorites.IsFavorite(card.Event.Key);
         }
 
         protected override void OnAppearing()
@@ -35,6 +41,30 @@ namespace EventHub
             await Navigation.PopAsync();
         }
 
+        private void OnFavoriteTapped(object? sender, TappedEventArgs e)
+        {
+            if (isFavorite)
+            {
+                favorites.DeleteEvent(card.Event.Key);
+            }
+            else
+            {
+                favorites.AddEvent(card.Event);
+            }
+            isFavorite = !isFavorite;
+            ShowFavorite();
+            SemanticScreenReader.Announce(isFavorite ? "Added to favorites" : "Removed from favorites");
+        }
+
+        // A filled star once the event is a favorite, and an outlined one otherwise
+        private void ShowFavorite()
+        {
+            favoriteIcon.Data = (Geometry)Application.Current!.Resources[isFavorite ? "IconStar" : "IconStarOutline"];
+            favoriteIcon.Fill = new SolidColorBrush(AppColors.Get(isFavorite ? "Primary" : "OnSurface"));
+            SemanticProperties.SetDescription(favoriteButton,
+                isFavorite ? "Remove from favorites" : "Add to favorites");
+        }
+
         private async void OnSessionsTapped(object? sender, TappedEventArgs e)
         {
             if (card.Event.Sessions.Count > 0)
@@ -46,6 +76,7 @@ namespace EventHub
         private void ShowEvent()
         {
             Event shown = card.Event;
+            ShowFavorite();
             nameLabel.Text = shown.Name;
             nameLabel.TextDecorations = card.NameDecorations;
             nameLabel.TextColor = card.TextColor;
