@@ -7,13 +7,8 @@ namespace EventHub
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
-            builder
-                .UseMauiApp<App>()
-                .ConfigureFonts(fonts =>
-                {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
+            // The platform font, Roboto on Android, as in the admin app.
+            builder.UseMauiApp<App>();
 
 #if DEBUG
     		builder.Logging.AddDebug();

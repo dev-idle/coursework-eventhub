@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Material Icons, outlined as in the admin app, drawn as paths so they take the theme's colors.
+     Each starts with two empty points at the corners of its 24 by 24 box, so a Path scales the
+     whole box and every icon keeps its size within it. -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <PathGeometry x:Key="IconCloudOff" Figures="M0,0h0M24,24h0M24,15c0,-2.64 -2.05,-4.78 -4.65,-4.96C18.67,6.59 15.64,4 12,4c-1.33,0 -2.57,0.36 -3.65,0.97l1.49,1.49C10.51,6.17 11.23,6 12,6c3.04,0 5.5,2.46 5.5,5.5v0.5H19c1.66,0 3,1.34 3,3 0,0.99 -0.48,1.85 -1.21,2.4l1.41,1.41c1.09,-0.92 1.8,-2.27 1.8,-3.81zM4.41,3.86L3,5.27l2.77,2.77h-0.42C2.34,8.36 0,10.91 0,14c0,3.31 2.69,6 6,6h11.73l2,2 1.41,-1.41L4.41,3.86zM6,18c-2.21,0 -4,-1.79 -4,-4s1.79,-4 4,-4h1.73l8,8H6z" />
+    <PathGeometry x:Key="IconList" Figures="M0,0h0M24,24h0M4,10.5c-0.83,0 -1.5,0.67 -1.5,1.5s0.67,1.5 1.5,1.5 1.5,-0.67 1.5,-1.5 -0.67,-1.5 -1.5,-1.5zM4,4.5c-0.83,0 -1.5,0.67 -1.5,1.5S3.17,7.5 4,7.5 5.5,6.83 5.5,6 4.83,4.5 4,4.5zM4,16.67c-0.74,0 -1.33,0.6 -1.33,1.33s0.6,1.33 1.33,1.33 1.33,-0.6 1.33,-1.33 -0.59,-1.33 -1.33,-1.33zM7,19h14v-2H7v2zM7,13h14v-2H7v2zM7,5v2h14V5H7z" />
+    <PathGeometry x:Key="IconPerson" Figures="M0,0h0M24,24h0M12,6c1.1,0 2,0.9 2,2s-0.9,2 -2,2 -2,-0.9 -2,-2 0.9,-2 2,-2m0,10c2.7,0 5.8,1.29 6,2H6c0.23,-0.72 3.31,-2 6,-2m0,-12C9.79,4 8,5.79 8,8s1.79,4 4,4 4,-1.79 4,-4 -1.79,-4 -4,-4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z" />
+    <PathGeometry x:Key="IconPlace" Figures="M0,0h0M24,24h0M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM7,9c0,-2.76 2.24,-5 5,-5s5,2.24 5,5c0,2.88 -2.88,7.19 -5,9.88C9.92,16.21 7,11.85 7,9zM12,11.5a2.5,2.5 0 1,0 0,-5 2.5,2.5 0 0,0 0,5z" />
+
+    <Style x:Key="Icon" TargetType="Path">
+        <Setter Property="Aspect" Value="Uniform" />
+        <Setter Property="WidthRequest" Value="24" />
+        <Setter Property="HeightRequest" Value="24" />
+        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <Style x:Key="SmallIcon" TargetType="Path" BasedOn="{StaticResource Icon}">
+        <Setter Property="WidthRequest" Value="18" />
+        <Setter Property="HeightRequest" Value="18" />
+    </Style>
+</ResourceDictionary>
