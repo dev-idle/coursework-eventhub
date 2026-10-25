@@ -37,7 +37,7 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             tools:text="6 events" />
 
-        <!-- Holds a chip per status, added in MainActivity, and stays put as the list scrolls. -->
+        <!-- One chip per filter, each opening its choices, and staying put as the list scrolls. -->
         <HorizontalScrollView
             android:id="@+id/filter_bar"
             android:layout_width="match_parent"
@@ -49,13 +49,30 @@
             android:visibility="gone"
             tools:visibility="visible">
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/filter_group"
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:saveEnabled="false"
-                app:singleLine="true"
-                app:singleSelection="true" />
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/date_filter"
+                    style="@style/Widget.EventHubAdmin.DropdownChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/organizer_filter"
+                    style="@style/Widget.EventHubAdmin.DropdownChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_small" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/status_filter"
+                    style="@style/Widget.EventHubAdmin.DropdownChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_small" />
+            </LinearLayout>
         </HorizontalScrollView>
     </com.google.android.material.appbar.AppBarLayout>
 

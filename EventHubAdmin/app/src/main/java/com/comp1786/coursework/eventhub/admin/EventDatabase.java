@@ -53,9 +53,10 @@ public class EventDatabase extends SQLiteOpenHelper {
     private static final String SELECT = "SELECT ID, Name, Date, StartTime, EndTime, Location, "
             + "Organizer, Type, Status, Description, ContactEmail, ContactPhone FROM Event ";
     private static final String START_ORDER = "ORDER BY Date, StartTime, ID";
-    private static final String SELECT_ALL = SELECT + START_ORDER;
-    private static final String SELECT_BY_STATUS = SELECT + "WHERE Status = ? " + START_ORDER;
     private static final String SELECT_BY_ID = SELECT + "WHERE ID = ?";
+    // One of each organizer, however it was capitalized, in alphabetical order.
+    private static final String SELECT_ORGANIZERS = "SELECT Organizer FROM Event "
+            + "GROUP BY Organizer COLLATE NOCASE ORDER BY Organizer COLLATE NOCASE";
     // A session's times fall within its event, and the session is deleted with the event.
     private static final String CREATE_SESSION_TABLE = "CREATE TABLE Session ("
             + "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -206,15 +207,31 @@ public class EventDatabase extends SQLiteOpenHelper {
 
     /** Returns every saved event in start order. */
     public List<Event> getAllEvents() {
-        return getEvents(null);
+        return getEvents(new EventFilter());
     }
 
-    /** Returns the saved events with this status, or all of them if it is null, in start order. */
-    public List<Event> getEvents(@Nullable EventStatus status) {
+    /** Returns the saved events the filter keeps, in start order. */
+    public List<Event> getEvents(EventFilter filter) {
+        List<String> conditions = new ArrayList<>();
+        List<String> args = new ArrayList<>();
+        if (filter.getDate() != null) {
+            conditions.add("Date = ?");
+            args.add(filter.getDate().toString());
+        }
+        if (filter.getOrganizer() != null) {
+            conditions.add("Organizer = ? COLLATE NOCASE");
+            args.add(filter.getOrganizer());
+        }
+        if (filter.getStatus() != null) {
+            conditions.add("Status = ?");
+            args.add(filter.getStatus().name());
+        }
+        // Only these fixed conditions are joined into the query; the values are bound to it.
+        String where = conditions.isEmpty()
+                ? "" : "WHERE " + String.join(" AND ", conditions) + " ";
         List<Event> events = new ArrayList<>();
-        try (Cursor cursor = status == null
-                ? getReadableDatabase().rawQuery(SELECT_ALL, null)
-                : getReadableDatabase().rawQuery(SELECT_BY_STATUS, new String[] {status.name()})) {
+        try (Cursor cursor = getReadableDatabase()
+                .rawQuery(SELECT + where + START_ORDER, args.toArray(new String[0]))) {
             while (cursor.moveToNext()) {
                 events.add(readEvent(cursor));
             }
@@ -305,6 +322,17 @@ public class EventDatabase extends SQLiteOpenHelper {
             }
         }
         return counts;
+    }
+
+    /** Returns the organizers of the saved events, for the organizer filter. */
+    public List<String> getOrganizers() {
+        List<String> organizers = new ArrayList<>();
+        try (Cursor cursor = getReadableDatabase().rawQuery(SELECT_ORGANIZERS, null)) {
+            while (cursor.moveToNext()) {
+                organizers.add(cursor.getString(0));
+            }
+        }
+        return organizers;
     }
 
     /** Returns how many events are saved. */

@@ -73,6 +73,15 @@
         <item name="materialThemeOverlay">@style/ThemeOverlay.EventHubAdmin.FilterChip</item>
     </style>
 
+    <!-- A filter that opens its choices: an arrow until one is chosen, then a clear button. -->
+    <style name="Widget.EventHubAdmin.DropdownChip" parent="Widget.EventHubAdmin.FilterChip">
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxWidth">@dimen/filter_chip_max_width</item>
+        <item name="android:saveEnabled">false</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">true</item>
+    </style>
+
     <style name="ThemeOverlay.EventHubAdmin.FilterChip" parent="ThemeOverlay.Material3.Chip">
         <item name="colorSecondaryContainer">?attr/colorPrimaryContainer</item>
         <item name="colorOnSecondaryContainer">?attr/colorOnPrimaryContainer</item>

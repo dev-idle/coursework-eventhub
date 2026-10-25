@@ -28,6 +28,9 @@
     <dimen name="card_time_line_height">1dp</dimen>
 
     <!-- Material 3 list item leading icon -->
+    <!-- Keeps the three filters on one row, with a long organizer cut short. -->
+    <dimen name="filter_chip_max_width">160dp</dimen>
+
     <dimen name="detail_icon_size">24dp</dimen>
     <dimen name="detail_icon_margin">16dp</dimen>
     <dimen name="detail_row_min_height">56dp</dimen>
