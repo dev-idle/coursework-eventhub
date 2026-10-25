@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,10 +20,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.divider.MaterialDividerItemDecoration;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -39,7 +38,6 @@ public class SessionsActivity extends AppCompatActivity
     private static final String STATE_SESSION_TO_DELETE = "session_to_delete";
 
     private MaterialToolbar toolbar;
-    private TextView eventText;
     private RecyclerView sessionList;
     private View emptyView;
     private ExtendedFloatingActionButton addButton;
@@ -91,14 +89,6 @@ public class SessionsActivity extends AppCompatActivity
         eventId = getIntent().getLongExtra(EXTRA_EVENT_ID, Event.NO_ID);
         adapter = new SessionAdapter(this);
         sessionList.setAdapter(adapter);
-        MaterialDividerItemDecoration divider = new MaterialDividerItemDecoration(
-                this, MaterialDividerItemDecoration.VERTICAL);
-        // On the screen keyline, like the dividers on the details screen.
-        int keyline = getResources().getDimensionPixelSize(R.dimen.screen_padding);
-        divider.setDividerInsetStart(keyline);
-        divider.setDividerInsetEnd(keyline);
-        divider.setLastItemDecorated(false);
-        sessionList.addItemDecoration(divider);
 
         // Shrinks to the icon while scrolling down, so it covers less of the list.
         sessionList.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -189,7 +179,6 @@ public class SessionsActivity extends AppCompatActivity
 
     private void bindViews() {
         toolbar = findViewById(R.id.toolbar);
-        eventText = findViewById(R.id.event_text);
         sessionList = findViewById(R.id.session_list);
         emptyView = findViewById(R.id.empty_view);
         addButton = findViewById(R.id.add_button);
@@ -253,10 +242,9 @@ public class SessionsActivity extends AppCompatActivity
             finish();
             return;
         }
-        eventText.setText(getString(R.string.session_event, event.getName(),
-                EventTimes.format(event.getStartTime()), EventTimes.format(event.getEndTime())));
+        toolbar.setSubtitle(event.getName());
         List<Session> sessions = database.getSessions(event);
-        adapter.setSessions(event, sessions);
+        adapter.setSessions(event, sessions, LocalDateTime.now());
         emptyView.setVisibility(sessions.isEmpty() ? View.VISIBLE : View.GONE);
         if (sessions.isEmpty()) {
             // The button may still be shrunk from scrolling, and the empty state needs its label.

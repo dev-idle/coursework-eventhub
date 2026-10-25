@@ -195,14 +195,13 @@
         <item quantity="other">%d sessions</item>
     </plurals>
     <string name="no_sessions">No sessions</string>
-    <!-- A session row read as one sentence, such as "09:00 to 10:00, Keynote, Opening talk" -->
-    <string name="description_session">%1$s to %2$s, %3$s, %4$s</string>
-    <!-- The same, ending with the speaker and the room -->
-    <string name="description_session_details">%1$s to %2$s, %3$s, %4$s, %5$s</string>
+    <string name="no_speaker">No speaker</string>
+    <string name="no_room">No room</string>
+    <!-- A session card read as one sentence, such as
+         "09:00 to 10:00, Keynote, Opening talk, Dr Amy Lee, Painted Hall" -->
+    <string name="description_session">%1$s to %2$s, %3$s, %4$s, %5$s, %6$s</string>
     <!-- A session time after midnight, as TalkBack reads it -->
     <string name="time_next_day">%1$s the next day</string>
-    <!-- Joins the speaker and the room on a session row -->
-    <string name="session_details_separator" translatable="false">" · "</string>
 
     <!-- Session types from the coursework brief -->
     <string name="session_type_workshop">Workshop</string>

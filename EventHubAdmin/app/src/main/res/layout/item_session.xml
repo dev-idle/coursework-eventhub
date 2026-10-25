@@ -1,33 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A session in the list: its times, then its name, type, speaker and room. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Drawn by EventCardDrawable like an event card, with the times where the card has its date. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:baselineAligned="false"
-    android:foreground="?attr/selectableItemBackground"
-    android:paddingStart="@dimen/screen_padding"
+    android:layout_margin="@dimen/card_margin"
     android:paddingTop="@dimen/space_medium"
-    android:paddingEnd="@dimen/screen_padding"
-    android:paddingBottom="@dimen/space_medium">
+    android:paddingBottom="@dimen/card_padding"
+    android:screenReaderFocusable="true">
 
+    <!-- Screen readers hear the card as one sentence instead. -->
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/time_panel"
+        android:layout_width="@dimen/card_date_panel_width"
+        android:layout_height="0dp"
+        android:gravity="center"
         android:importantForAccessibility="noHideDescendants"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- A raised +1 marks a time on the next day, as on the cards. -->
+        <!-- A raised +1 marks a time on the next day, as on the event cards. -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:baselineAligned="false">
 
             <TextView
                 android:id="@+id/session_start"
-                style="@style/Widget.EventHubAdmin.CardTime"
+                style="@style/Widget.EventHubAdmin.DatePanel.StartTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="00:00" />
+                tools:text="09:00" />
 
             <TextView
                 android:id="@+id/session_start_next_day"
@@ -39,14 +45,15 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:baselineAligned="false">
 
             <TextView
                 android:id="@+id/session_end"
-                style="@style/Widget.EventHubAdmin.DetailSupporting"
+                style="@style/Widget.EventHubAdmin.DatePanel.EndTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="00:30" />
+                tools:text="10:00" />
 
             <TextView
                 android:id="@+id/session_end_next_day"
@@ -57,46 +64,61 @@
         </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/session_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/detail_icon_margin"
-        android:layout_weight="1"
-        android:importantForAccessibility="noHideDescendants"
-        android:orientation="vertical">
+        android:layout_marginStart="@dimen/card_padding"
+        android:layout_marginEnd="@dimen/card_padding"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="2"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/time_panel"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Opening keynote" />
 
-        <TextView
-            android:id="@+id/session_name"
-            style="@style/Widget.EventHubAdmin.DetailValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="Opening keynote" />
+    <!-- Gray for every type, so only the event's own type is colored. -->
+    <TextView
+        android:id="@+id/session_type"
+        style="@style/Widget.EventHubAdmin.TypeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_small"
+        android:backgroundTint="@color/type_other_container"
+        android:importantForAccessibility="no"
+        app:layout_constraintStart_toStartOf="@id/session_name"
+        app:layout_constraintTop_toBottomOf="@id/session_name"
+        tools:text="Keynote" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_extra_small"
-            android:gravity="center_vertical">
+    <!-- Shown on every card, with "No speaker" too, so all cards read the same way. -->
+    <TextView
+        android:id="@+id/session_speaker"
+        style="@style/Widget.EventHubAdmin.CardDetail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_small"
+        android:layout_marginEnd="@dimen/card_padding"
+        android:importantForAccessibility="no"
+        app:drawableStartCompat="@drawable/ic_person"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/session_name"
+        app:layout_constraintTop_toBottomOf="@id/session_type"
+        tools:text="Dr Amy Lee" />
 
-            <!-- Gray for every type, so only the event's own type is colored. -->
-            <TextView
-                android:id="@+id/session_type"
-                style="@style/Widget.EventHubAdmin.TypeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/type_other_container"
-                tools:text="Keynote" />
-
-            <TextView
-                android:id="@+id/session_details"
-                style="@style/Widget.EventHubAdmin.DetailSupporting"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_small"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                tools:text="Dr Amy Lee · Painted Hall" />
-        </LinearLayout>
-    </LinearLayout>
-</LinearLayout>
+    <TextView
+        android:id="@+id/session_room"
+        style="@style/Widget.EventHubAdmin.CardDetail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_extra_small"
+        android:layout_marginEnd="@dimen/card_padding"
+        android:importantForAccessibility="no"
+        app:drawableStartCompat="@drawable/ic_door_front"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/session_name"
+        app:layout_constraintTop_toBottomOf="@id/session_speaker"
+        tools:text="Painted Hall" />
+</androidx.constraintlayout.widget.ConstraintLayout>
