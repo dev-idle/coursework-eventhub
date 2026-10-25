@@ -60,14 +60,14 @@
                     android:layout_height="wrap_content" />
 
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/organizer_filter"
+                    android:id="@+id/status_filter"
                     style="@style/Widget.EventHubAdmin.DropdownChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/space_small" />
 
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/status_filter"
+                    android:id="@+id/organizer_filter"
                     style="@style/Widget.EventHubAdmin.DropdownChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

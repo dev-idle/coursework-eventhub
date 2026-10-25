@@ -53,8 +53,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     private TextView eventCount;
     private View filterBar;
     private Chip dateFilter;
-    private Chip organizerFilter;
     private Chip statusFilter;
+    private Chip organizerFilter;
     private RecyclerView eventList;
     private View emptyView;
     private TextView emptyTitle;
@@ -294,8 +294,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         eventCount = findViewById(R.id.event_count);
         filterBar = findViewById(R.id.filter_bar);
         dateFilter = findViewById(R.id.date_filter);
-        organizerFilter = findViewById(R.id.organizer_filter);
         statusFilter = findViewById(R.id.status_filter);
+        organizerFilter = findViewById(R.id.organizer_filter);
         eventList = findViewById(R.id.event_list);
         emptyView = findViewById(R.id.empty_view);
         emptyTitle = findViewById(R.id.empty_title);
@@ -384,8 +384,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     /** Opens each filter's choices, and clears a chosen one from its close button. */
     private void setUpFilters() {
         setUpFilter(dateFilter, this::showDatePicker, () -> filter.setDate(null));
-        setUpFilter(organizerFilter, this::showOrganizerMenu, () -> filter.setOrganizer(null));
         setUpFilter(statusFilter, this::showStatusMenu, () -> filter.setStatus(null));
+        setUpFilter(organizerFilter, this::showOrganizerMenu, () -> filter.setOrganizer(null));
         getSupportFragmentManager().setFragmentResultListener(DatePickerFragment.REQUEST_KEY,
                 this, (key, result) -> {
                     filter.setDate(result.getSerializable(
@@ -421,21 +421,6 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                 .show(getSupportFragmentManager(), DatePickerFragment.REQUEST_KEY);
     }
 
-    /** Lists the organizers of the saved events, so one is chosen rather than typed. */
-    private void showOrganizerMenu() {
-        List<String> organizers = database.getOrganizers();
-        MoreMenu.Item[] items = new MoreMenu.Item[organizers.size()];
-        for (int i = 0; i < items.length; i++) {
-            String organizer = organizers.get(i);
-            items[i] = new MoreMenu.Item(R.layout.item_menu_choice, organizer,
-                    organizer.equals(filter.getOrganizer()), () -> {
-                        filter.setOrganizer(organizer);
-                        showEvents();
-                    });
-        }
-        openMenu = MoreMenu.show(this, organizerFilter, Gravity.START, items);
-    }
-
     /** Lists the statuses under their chip, with the chosen one ticked. */
     private void showStatusMenu() {
         EventStatus[] statuses = EventStatus.values();
@@ -451,17 +436,32 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         openMenu = MoreMenu.show(this, statusFilter, Gravity.START, items);
     }
 
+    /** Lists the organizers of the saved events, so one is chosen rather than typed. */
+    private void showOrganizerMenu() {
+        List<String> organizers = database.getOrganizers();
+        MoreMenu.Item[] items = new MoreMenu.Item[organizers.size()];
+        for (int i = 0; i < items.length; i++) {
+            String organizer = organizers.get(i);
+            items[i] = new MoreMenu.Item(R.layout.item_menu_choice, organizer,
+                    organizer.equals(filter.getOrganizer()), () -> {
+                        filter.setOrganizer(organizer);
+                        showEvents();
+                    });
+        }
+        openMenu = MoreMenu.show(this, organizerFilter, Gravity.START, items);
+    }
+
     /** Shows each filter's label, or its chosen value with a button that clears it. */
     private void showFilters() {
         LocalDate date = filter.getDate();
         EventStatus status = filter.getStatus();
         showFilter(dateFilter, R.string.filter_date,
                 date == null ? null : EventDates.format(date), R.string.description_clear_date);
-        showFilter(organizerFilter, R.string.filter_organizer, filter.getOrganizer(),
-                R.string.description_clear_organizer);
         showFilter(statusFilter, R.string.filter_status,
                 status == null ? null : getString(status.getLabelRes()),
                 R.string.description_clear_status);
+        showFilter(organizerFilter, R.string.filter_organizer, filter.getOrganizer(),
+                R.string.description_clear_organizer);
     }
 
     private void showFilter(Chip chip, @StringRes int labelRes, @Nullable String value,
@@ -578,8 +578,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     /** Locks the filters while selecting, so the events to select stay the same. */
     private void setFiltersEnabled(boolean enabled) {
         dateFilter.setEnabled(enabled);
-        organizerFilter.setEnabled(enabled);
         statusFilter.setEnabled(enabled);
+        organizerFilter.setEnabled(enabled);
     }
 
     /** Asks before deleting the selected events, which Undo can then bring back. */
