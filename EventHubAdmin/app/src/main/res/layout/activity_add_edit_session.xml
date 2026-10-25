@@ -8,12 +8,16 @@
     android:orientation="vertical"
     tools:context=".AddEditSessionActivity">
 
+    <!-- The event's name is the subtitle, as on the sessions screen. -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:navigationContentDescription="@string/description_navigate_up"
-        app:navigationIcon="?attr/homeAsUpIndicator" />
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:subtitleTextAppearance="?attr/textAppearanceBodyMedium"
+        app:subtitleTextColor="?attr/colorOnSurfaceVariant"
+        tools:subtitle="Greenwich tech conference" />
 
     <!-- Fills the screen, so the sheet reaches the bottom when the form is short. -->
     <androidx.core.widget.NestedScrollView
@@ -30,15 +34,6 @@
             android:background="@color/card_body"
             android:orientation="vertical"
             android:padding="@dimen/screen_padding">
-
-            <!-- The event the session belongs to, and the time its sessions must fit in. -->
-            <TextView
-                android:id="@+id/event_text"
-                style="@style/Widget.EventHubAdmin.DetailSupporting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_medium"
-                tools:text="Greenwich tech conference · 09:00–17:30" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/name_layout"
@@ -80,7 +75,8 @@
                     android:minLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- AddEditSessionActivity fills both lists with times within the event. -->
+            <!-- AddEditSessionActivity fills both lists with times within the event,
+                 whose hours show under Start time and the length under End time. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

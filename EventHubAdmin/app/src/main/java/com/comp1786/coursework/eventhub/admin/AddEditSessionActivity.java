@@ -7,7 +7,6 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
@@ -49,7 +48,6 @@ public class AddEditSessionActivity extends AppCompatActivity {
 
     private MaterialToolbar toolbar;
     private View sheet;
-    private TextView eventText;
     private TextInputLayout nameLayout;
     private TextInputLayout descriptionLayout;
     private TextInputLayout startTimeLayout;
@@ -110,7 +108,9 @@ public class AddEditSessionActivity extends AppCompatActivity {
         database = new EventDatabase(this);
         event = getIntent().getSerializableExtra(EXTRA_EVENT, Event.class);
         sessionToEdit = getIntent().getSerializableExtra(EXTRA_SESSION, Session.class);
-        eventText.setText(getString(R.string.session_event, event.getName(),
+        toolbar.setSubtitle(event.getName());
+        // The hours a session must fit in, where its times are chosen.
+        startTimeLayout.setHelperText(getString(R.string.session_hours,
                 EventTimes.format(event.getStartTime()), EventTimes.format(event.getEndTime())));
         buildTypeMenu();
         buildTimeMenus();
@@ -134,6 +134,7 @@ public class AddEditSessionActivity extends AppCompatActivity {
         for (TextInputLayout layout : allLayouts()) {
             layout.getEditText().addTextChangedListener(new InputWatcher(layout));
         }
+        showLength();
         discardCallback.setEnabled(hasChanges());
     }
 
@@ -182,7 +183,6 @@ public class AddEditSessionActivity extends AppCompatActivity {
     private void bindViews() {
         toolbar = findViewById(R.id.toolbar);
         sheet = findViewById(R.id.sheet);
-        eventText = findViewById(R.id.event_text);
         nameLayout = findViewById(R.id.name_layout);
         descriptionLayout = findViewById(R.id.description_layout);
         startTimeLayout = findViewById(R.id.start_time_layout);
@@ -342,6 +342,21 @@ public class AddEditSessionActivity extends AppCompatActivity {
     }
 
     /** Clears a field's error once the user edits it. */
+    /** Shows how long the session lasts under the end time once both times are valid. */
+    private void showLength() {
+        EventValidator.Result<LocalTime> start =
+                EventValidator.validateTime(textOf(startTimeInput));
+        EventValidator.Result<LocalTime> end =
+                EventValidator.validateEndTime(textOf(endTimeInput), start.getValue());
+        if (!start.isValid() || !end.isValid()) {
+            endTimeLayout.setHelperText(null);
+            return;
+        }
+        String length = EventTimes.formatLength(getResources(), start.getValue(), end.getValue());
+        endTimeLayout.setHelperText(EventTimes.endsNextDay(start.getValue(), end.getValue())
+                ? getString(R.string.end_time_next_day, length) : length);
+    }
+
     private final class InputWatcher implements TextWatcher {
 
         private final TextInputLayout layout;
@@ -368,6 +383,9 @@ public class AddEditSessionActivity extends AppCompatActivity {
             }
             layout.setError(null);
             discardCallback.setEnabled(hasChanges());
+            if (layout == startTimeLayout || layout == endTimeLayout) {
+                showLength();
+            }
         }
     }
 }
