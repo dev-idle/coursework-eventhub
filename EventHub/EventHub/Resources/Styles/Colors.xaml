@@ -28,11 +28,13 @@
     <Color x:Key="SurfaceContainerHighest">#E2E2E9</Color>
     <Color x:Key="SurfaceContainerHighestDark">#33353A</Color>
 
-    <!-- The screen behind the cards, and the cards, as in the admin app -->
+    <!-- The screen behind the cards, the cards and the menus, as in the admin app -->
     <Color x:Key="Background">#EEEDF4</Color>
     <Color x:Key="BackgroundDark">#111318</Color>
     <Color x:Key="Card">#FFFFFF</Color>
     <Color x:Key="CardDark">#282A2F</Color>
+    <Color x:Key="Menu">#EEEDF4</Color>
+    <Color x:Key="MenuDark">#1E1F25</Color>
 
     <!-- Event type labels -->
     <Color x:Key="TypeConference">#DEECFF</Color>

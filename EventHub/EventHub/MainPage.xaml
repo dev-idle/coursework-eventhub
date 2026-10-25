@@ -6,22 +6,119 @@
              Title="Events"
              Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="64,Auto,*">
-        <!-- The app's name, large as in the admin app -->
-        <Label Text="EventHub"
-               Style="{StaticResource PageTitle}"
-               SemanticProperties.HeadingLevel="Level1" />
+    <Grid RowDefinitions="64,Auto,Auto,*">
+        <!-- The app's name, large as in the admin app, with a button that turns the row into
+             a search field of the same height, so nothing below moves -->
+        <Grid x:Name="titleBar" ColumnDefinitions="*,Auto" Padding="0,0,4,0">
+            <Label Text="EventHub"
+                   Style="{StaticResource PageTitle}"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Grid x:Name="searchButton"
+                  Grid.Column="1"
+                  Style="{StaticResource IconButton}"
+                  SemanticProperties.Description="Search">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSearchTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconSearch}" Style="{StaticResource Icon}" Fill="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="searchBar" ColumnDefinitions="Auto,*,Auto" Padding="4,0" IsVisible="False">
+            <Grid Style="{StaticResource IconButton}" SemanticProperties.Description="Close search">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCloseSearchTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconBack}" Style="{StaticResource Icon}" Fill="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+            </Grid>
+            <Entry x:Name="searchEntry"
+                   Grid.Column="1"
+                   Placeholder="Search events"
+                   Style="{StaticResource SearchField}"
+                   TextChanged="OnSearchTextChanged"
+                   Completed="OnSearchCompleted" />
+            <Grid x:Name="clearSearchButton"
+                  Grid.Column="2"
+                  Style="{StaticResource IconButton}"
+                  SemanticProperties.Description="Clear search"
+                  IsVisible="False">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnClearSearchTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconClose}" Style="{StaticResource Icon}" />
+            </Grid>
+        </Grid>
 
         <Label x:Name="countLabel"
                Grid.Row="1"
                Style="{StaticResource Count}"
                IsVisible="False" />
 
+        <!-- One chip per filter, in the order a card shows the date, type and status -->
+        <ScrollView x:Name="filterBar"
+                    Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalScrollBarVisibility="Never"
+                    IsVisible="False">
+            <HorizontalStackLayout Padding="16,8,16,4" Spacing="8">
+                <Border x:Name="dateChip" Style="{StaticResource Chip}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDateChipTapped" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout>
+                        <Label x:Name="dateChipText" Style="{StaticResource ChipText}" />
+                        <Grid Style="{StaticResource ChipButton}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDateChipButtonTapped" />
+                            </Grid.GestureRecognizers>
+                            <Path x:Name="dateChipIcon" Style="{StaticResource SmallIcon}" />
+                        </Grid>
+                    </HorizontalStackLayout>
+                </Border>
+                <Border x:Name="typeChip" Style="{StaticResource Chip}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTypeChipTapped" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout>
+                        <Label x:Name="typeChipText" Style="{StaticResource ChipText}" />
+                        <Grid Style="{StaticResource ChipButton}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTypeChipButtonTapped" />
+                            </Grid.GestureRecognizers>
+                            <Path x:Name="typeChipIcon" Style="{StaticResource SmallIcon}" />
+                        </Grid>
+                    </HorizontalStackLayout>
+                </Border>
+                <Border x:Name="statusChip" Style="{StaticResource Chip}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnStatusChipTapped" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout>
+                        <Label x:Name="statusChipText" Style="{StaticResource ChipText}" />
+                        <Grid Style="{StaticResource ChipButton}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnStatusChipButtonTapped" />
+                            </Grid.GestureRecognizers>
+                            <Path x:Name="statusChipIcon" Style="{StaticResource SmallIcon}" />
+                        </Grid>
+                    </HorizontalStackLayout>
+                </Border>
+                <!-- Opened from the date chip, as the date filter of the admin app opens a dialog -->
+                <DatePicker x:Name="datePicker"
+                            Opacity="0"
+                            WidthRequest="1"
+                            InputTransparent="True"
+                            DateSelected="OnDateSelected" />
+            </HorizontalStackLayout>
+        </ScrollView>
+
         <!-- The events by month, as cards like the admin app's -->
         <CollectionView x:Name="eventList"
-                        Grid.Row="2"
+                        Grid.Row="3"
                         IsGrouped="True"
-                        Margin="0,4,0,0">
+                        Margin="0,4,0,0"
+                        VerticalScrollBarVisibility="Never"
+                        Scrolled="OnListScrolled">
             <CollectionView.GroupHeaderTemplate>
                 <DataTemplate x:DataType="local:MonthGroup">
                     <Label Text="{Binding Name}"
@@ -119,14 +216,14 @@
         </CollectionView>
 
         <ActivityIndicator x:Name="loadingIndicator"
-                           Grid.Row="2"
+                           Grid.Row="3"
                            IsRunning="True"
                            HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Shown when no event is in the cloud, or the events cannot be read -->
         <VerticalStackLayout x:Name="messageView"
-                             Grid.Row="2"
+                             Grid.Row="3"
                              Padding="24,0"
                              Spacing="4"
                              VerticalOptions="Center"
@@ -145,6 +242,37 @@
                     Margin="0,16,0,0"
                     Clicked="OnRetryClicked" />
         </VerticalStackLayout>
+
+        <!-- A filter's choices under its chip, closed by a tap anywhere else, like the admin app's menus -->
+        <Grid x:Name="menuLayer" Grid.RowSpan="4" IsVisible="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMenuLayerTapped" />
+            </Grid.GestureRecognizers>
+            <Border x:Name="filterMenu" Style="{StaticResource Menu}">
+                <VerticalStackLayout x:Name="menuItems" Padding="0,8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="local:MenuChoice">
+                            <Grid ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="16"
+                                  HeightRequest="48"
+                                  Padding="16,0"
+                                  SemanticProperties.Description="{Binding Description}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMenuChoiceTapped" />
+                                </Grid.GestureRecognizers>
+                                <Label Text="{Binding Label}" FontSize="16" VerticalTextAlignment="Center" />
+                                <!-- Every row keeps room for the tick, so the text does not move -->
+                                <Path Grid.Column="1"
+                                      Data="{StaticResource IconCheck}"
+                                      Style="{StaticResource Icon}"
+                                      Fill="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}"
+                                      Opacity="{Binding TickOpacity}" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </Grid>
 
 </ContentPage>

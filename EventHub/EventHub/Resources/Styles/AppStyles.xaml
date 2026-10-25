@@ -10,6 +10,21 @@
         <Setter Property="VerticalTextAlignment" Value="Center" />
     </Style>
 
+    <!-- An icon that is tapped, with a touch area of 48 by 48 -->
+    <Style x:Key="IconButton" TargetType="Grid">
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="WidthRequest" Value="48" />
+    </Style>
+
+    <Style x:Key="SearchField" TargetType="Entry">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+        <Setter Property="ReturnType" Value="Search" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
     <Style x:Key="Count" TargetType="Label">
         <Setter Property="FontFamily" Value="sans-serif-medium" />
         <Setter Property="FontSize" Value="14" />
@@ -23,6 +38,37 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="Padding" Value="20,16,20,4" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <!-- Filter chips, whose colors are set in code as a filter is chosen or cleared -->
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="HeightRequest" Value="32" />
+        <Setter Property="Padding" Value="12,0,4,0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        <Setter Property="StrokeThickness" Value="1" />
+    </Style>
+
+    <Style x:Key="ChipText" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="ChipButton" TargetType="Grid">
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="VerticalOptions" Value="Fill" />
+    </Style>
+
+    <!-- Menus, with the color and shadow of the admin app's -->
+    <Style x:Key="Menu" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Menu}, Dark={StaticResource MenuDark}}" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="Shadow">
+            <Shadow Brush="Black" Offset="0,2" Opacity="0.25" Radius="8" />
+        </Setter>
+        <Setter Property="StrokeShape" Value="RoundRectangle 4" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="VerticalOptions" Value="Start" />
     </Style>
 
     <!-- Event cards -->
