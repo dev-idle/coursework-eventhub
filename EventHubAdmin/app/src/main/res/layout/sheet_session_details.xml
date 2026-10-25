@@ -95,7 +95,7 @@
                 android:layout_marginTop="@dimen/space_small"
                 android:layout_marginEnd="@dimen/detail_icon_margin"
                 android:importantForAccessibility="no"
-                android:src="@drawable/ic_meeting_room"
+                android:src="@drawable/ic_door_front"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
             <LinearLayout
