@@ -61,23 +61,20 @@ namespace EventHub
 
         public bool IsLive => State == CardState.Live;
 
+        public bool IsCancelled => State == CardState.Cancelled;
+
+        // Such as "Friday 6 November 2026"
+        public string LongDate => Event.Start.ToString("dddd d MMMM yyyy", English);
+
+        public string TimeRange => $"{Event.StartTime}–{Event.EndTime}";
+
         public TextDecorations NameDecorations =>
             State == CardState.Cancelled ? TextDecorations.Strikethrough : TextDecorations.None;
 
         // Colors for the theme in use, as the list is shown again when the theme changes.
-        public Color PanelColor => AppColors.Get(State switch
-        {
-            CardState.Live or CardState.Next => "Primary",
-            CardState.Upcoming => "PrimaryContainer",
-            _ => "SurfaceContainerHighest"
-        });
+        public Color PanelColor => GetPanelColor(State);
 
-        public Color PanelTextColor => AppColors.Get(State switch
-        {
-            CardState.Live or CardState.Next => "OnPrimary",
-            CardState.Upcoming => "OnPrimaryContainer",
-            _ => "OnSurfaceVariant"
-        });
+        public Color PanelTextColor => GetPanelTextColor(State);
 
         // Cancelled is the only status in red, as the one that does not follow from the time.
         public Color StatusColor => AppColors.Get(State switch
@@ -93,20 +90,41 @@ namespace EventHub
         public Color TypeColor => AppColors.Get(State == CardState.Cancelled
             ? "SurfaceContainerHighest" : "Type" + TypeLabel);
 
+        // The date panel of an event card, or the time panel of a session card
+        public static Color GetPanelColor(CardState state) => AppColors.Get(state switch
+        {
+            CardState.Live or CardState.Next => "Primary",
+            CardState.Upcoming => "PrimaryContainer",
+            _ => "SurfaceContainerHighest"
+        });
+
+        public static Color GetPanelTextColor(CardState state) => AppColors.Get(state switch
+        {
+            CardState.Live or CardState.Next => "OnPrimary",
+            CardState.Upcoming => "OnPrimaryContainer",
+            _ => "OnSurfaceVariant"
+        });
+
         // When the next events start, or null while one is happening or none is ahead.
         public static DateTime? GetNextStart(IEnumerable<Event> events, DateTime now)
         {
+            return GetNextStart(events.Where(e => !e.IsCancelled).Select(e => (e.Start, e.End)), now);
+        }
+
+        // When the next of these start, or null while one is happening or none is ahead.
+        public static DateTime? GetNextStart(IEnumerable<(DateTime Start, DateTime End)> times,
+            DateTime now)
+        {
             DateTime? nextStart = null;
-            foreach (Event e in events)
+            foreach (var (start, end) in times)
             {
-                CardState state = GetState(e, now, null);
-                if (state == CardState.Live)
+                if (start <= now && now < end)
                 {
                     return null;
                 }
-                if (state == CardState.Upcoming && (nextStart == null || e.Start < nextStart))
+                if (start > now && (nextStart == null || start < nextStart))
                 {
-                    nextStart = e.Start;
+                    nextStart = start;
                 }
             }
             return nextStart;
@@ -114,19 +132,26 @@ namespace EventHub
 
         public static CardState GetState(Event e, DateTime now, DateTime? nextStart)
         {
-            if (e.IsCancelled)
+            return GetState(e.IsCancelled, e.Start, e.End, now, nextStart);
+        }
+
+        // A session is cancelled along with its event.
+        public static CardState GetState(bool cancelled, DateTime start, DateTime end,
+            DateTime now, DateTime? nextStart)
+        {
+            if (cancelled)
             {
                 return CardState.Cancelled;
             }
-            if (e.End <= now)
+            if (end <= now)
             {
                 return CardState.Past;
             }
-            if (e.Start <= now)
+            if (start <= now)
             {
                 return CardState.Live;
             }
-            return e.Start == nextStart ? CardState.Next : CardState.Upcoming;
+            return start == nextStart ? CardState.Next : CardState.Upcoming;
         }
 
         public static string GetTypeLabel(string type) => type switch
@@ -135,6 +160,16 @@ namespace EventHub
             "WORKSHOP" => "Workshop",
             "SEMINAR" => "Seminar",
             "SOCIAL" => "Social",
+            _ => "Other"
+        };
+
+        public static string GetSessionTypeLabel(string type) => type switch
+        {
+            "WORKSHOP" => "Workshop",
+            "PRESENTATION" => "Presentation",
+            "PANEL_DISCUSSION" => "Panel discussion",
+            "NETWORKING" => "Networking",
+            "KEYNOTE" => "Keynote",
             _ => "Other"
         };
 

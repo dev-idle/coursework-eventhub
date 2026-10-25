@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:EventHub"
+             x:Class="EventHub.SessionsPage"
+             Title="Sessions"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="64,*">
+        <!-- The title with the event's name under it, and a search of the sessions -->
+        <Grid x:Name="titleBar" ColumnDefinitions="Auto,*,Auto" Padding="4,0">
+            <Grid Style="{StaticResource IconButton}" SemanticProperties.Description="Back">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconBack}" Style="{StaticResource BarIcon}" />
+            </Grid>
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="4,0,0,0">
+                <Label Text="Sessions"
+                       Style="{StaticResource BarTitle}"
+                       Margin="0"
+                       SemanticProperties.HeadingLevel="Level1" />
+                <Label x:Name="eventNameLabel" Style="{StaticResource BarSubtitle}" />
+            </VerticalStackLayout>
+            <Grid Grid.Column="2" Style="{StaticResource IconButton}" SemanticProperties.Description="Search">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSearchTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconSearch}" Style="{StaticResource BarIcon}" />
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="searchBar" ColumnDefinitions="Auto,*,Auto" Padding="4,0" IsVisible="False">
+            <Grid Style="{StaticResource IconButton}" SemanticProperties.Description="Close search">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCloseSearchTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconBack}" Style="{StaticResource BarIcon}" />
+            </Grid>
+            <Entry x:Name="searchEntry"
+                   Grid.Column="1"
+                   Placeholder="Search sessions"
+                   Style="{StaticResource SearchField}"
+                   TextChanged="OnSearchTextChanged"
+                   Completed="OnSearchCompleted" />
+            <Grid x:Name="clearSearchButton"
+                  Grid.Column="2"
+                  Style="{StaticResource IconButton}"
+                  SemanticProperties.Description="Clear search"
+                  IsVisible="False">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnClearSearchTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconClose}" Style="{StaticResource Icon}" />
+            </Grid>
+        </Grid>
+
+        <!-- The sessions in the order they take place, as cards like the admin app's -->
+        <CollectionView x:Name="sessionList"
+                        Grid.Row="1"
+                        Margin="0,4,0,0"
+                        VerticalScrollBarVisibility="Never"
+                        Scrolled="OnListScrolled">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="local:SessionCard">
+                    <Grid Padding="16,4">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSessionTapped" />
+                        </Grid.GestureRecognizers>
+                        <Border Style="{StaticResource Card}">
+                            <Grid ColumnDefinitions="64,*">
+                                <!-- The start and end times, where an event card has its date -->
+                                <Grid BackgroundColor="{Binding PanelColor}">
+                                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                                        <HorizontalStackLayout HorizontalOptions="Center">
+                                            <Label Text="{Binding StartTime}"
+                                                   FontFamily="sans-serif-medium"
+                                                   FontSize="16"
+                                                   TextColor="{Binding PanelTextColor}" />
+                                            <Label Text="+1"
+                                                   Style="{StaticResource NextDay}"
+                                                   TextColor="{Binding PanelTextColor}"
+                                                   IsVisible="{Binding HasNextDay}"
+                                                   Opacity="{Binding StartNextDayOpacity}" />
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout HorizontalOptions="Center">
+                                            <Label Text="{Binding EndTime}"
+                                                   FontSize="12"
+                                                   TextColor="{Binding PanelTextColor}" />
+                                            <Label Text="+1"
+                                                   Style="{StaticResource NextDay}"
+                                                   TextColor="{Binding PanelTextColor}"
+                                                   IsVisible="{Binding HasNextDay}"
+                                                   Opacity="{Binding EndNextDayOpacity}" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                    <Rectangle Style="{StaticResource CardDivider}" />
+                                </Grid>
+
+                                <VerticalStackLayout Grid.Column="1" Padding="16,12,16,16">
+                                    <Label Text="{Binding Name}" Style="{StaticResource CardName}" />
+                                    <HorizontalStackLayout Margin="0,6,0,4">
+                                        <Border Style="{StaticResource SessionTypeLabel}">
+                                            <Label Text="{Binding TypeLabel}" Style="{StaticResource LabelText}" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,4,0,0">
+                                        <Path Data="{StaticResource IconPerson}" Style="{StaticResource SmallIcon}" />
+                                        <Label Grid.Column="1" Text="{Binding Speaker}" Style="{StaticResource CardDetail}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,4,0,0">
+                                        <Path Data="{StaticResource IconDoor}" Style="{StaticResource SmallIcon}" />
+                                        <Label Grid.Column="1" Text="{Binding Room}" Style="{StaticResource CardDetail}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                        <Ellipse Style="{StaticResource CardNotch}" VerticalOptions="Start" Margin="56,-8,0,0" />
+                        <Ellipse Style="{StaticResource CardNotch}" VerticalOptions="End" Margin="56,0,0,-8" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <VerticalStackLayout x:Name="emptyView"
+                             Grid.Row="1"
+                             Padding="24,0"
+                             Spacing="4"
+                             VerticalOptions="Center"
+                             IsVisible="False">
+            <Label Text="No matching sessions" Style="{StaticResource EmptyTitle}" />
+            <Label Text="Check the spelling, or try fewer letters." Style="{StaticResource EmptyMessage}" />
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>

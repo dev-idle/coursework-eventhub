@@ -130,6 +130,9 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="local:EventCard">
                     <Grid Padding="16,4">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnEventTapped" />
+                        </Grid.GestureRecognizers>
                         <Border Style="{StaticResource Card}">
                             <Grid ColumnDefinitions="64,*">
                                 <Grid BackgroundColor="{Binding PanelColor}">

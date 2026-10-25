@@ -24,6 +24,8 @@ namespace EventHub
         // Set while the events are read, and when they change again during the read
         private bool reading;
         private bool readAgain;
+        // Set while an event opens, so a quick second tap does not open it twice
+        private bool opening;
 
         // The search and filters, kept while the app runs but not saved, as in the admin app
         private string searchText = string.Empty;
@@ -42,6 +44,7 @@ namespace EventHub
         protected override void OnAppearing()
         {
             base.OnAppearing();
+            opening = false;
             Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
             if (loaded)
             {
@@ -72,6 +75,16 @@ namespace EventHub
         private void OnRetryClicked(object? sender, EventArgs e)
         {
             GetEvents();
+        }
+
+        private async void OnEventTapped(object? sender, TappedEventArgs e)
+        {
+            // The BindingContext of the tapped card is its event, as in the module brief
+            if (!opening && (sender as BindableObject)?.BindingContext is EventCard card)
+            {
+                opening = true;
+                await Navigation.PushAsync(new EventDetailsPage(card));
+            }
         }
 
         // Back closes an open menu, then the search, before it leaves the app
@@ -355,6 +368,10 @@ namespace EventHub
                     foreach (var item in items)
                     {
                         item.Object.Key = item.Key;
+                        foreach (var session in item.Object.Sessions)
+                        {
+                            session.Value.Key = session.Key;
+                        }
                         events[item.Key] = item.Object;
                     }
                     loaded = true;

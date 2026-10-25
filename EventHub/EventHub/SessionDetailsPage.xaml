@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EventHub.SessionDetailsPage"
+             Title="Session details"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="64,*">
+        <Grid ColumnDefinitions="Auto,*" Padding="4,0">
+            <Grid Style="{StaticResource IconButton}" SemanticProperties.Description="Back">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconBack}" Style="{StaticResource BarIcon}" />
+            </Grid>
+            <Label Grid.Column="1"
+                   Text="Session details"
+                   Style="{StaticResource BarTitle}"
+                   SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,8,16,16" Spacing="8">
+                <Border Style="{StaticResource Card}" Padding="0,16,0,8">
+                    <VerticalStackLayout>
+                        <Label x:Name="nameLabel" Style="{StaticResource DetailName}" />
+                        <HorizontalStackLayout Padding="16,8,16,16">
+                            <Border Style="{StaticResource SessionTypeLabel}">
+                                <Label x:Name="typeText" Style="{StaticResource LabelText}" />
+                            </Border>
+                        </HorizontalStackLayout>
+                        <BoxView Style="{StaticResource Divider}" />
+
+                        <Grid Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconEvent}" Style="{StaticResource Icon}" />
+                            <Label x:Name="dateLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                        </Grid>
+                        <Grid x:Name="timeRow" Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconSchedule}" Style="{StaticResource Icon}" />
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <HorizontalStackLayout>
+                                    <Label x:Name="timeLabel" Style="{StaticResource DetailValue}" />
+                                    <Label x:Name="nextDayLabel" Text="+1" Style="{StaticResource NextDay}" />
+                                </HorizontalStackLayout>
+                                <Label x:Name="lengthLabel" Style="{StaticResource DetailSubtext}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- The speaker and room are optional, so their rows hide when empty -->
+                        <Grid x:Name="speakerRow" Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconPerson}" Style="{StaticResource Icon}" />
+                            <Label x:Name="speakerLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                        </Grid>
+                        <Grid x:Name="roomRow" Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconDoor}" Style="{StaticResource Icon}" />
+                            <Label x:Name="roomLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border x:Name="descriptionCard" Style="{StaticResource Card}" Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Description" Style="{StaticResource CardTitle}" />
+                        <Label x:Name="descriptionLabel" Style="{StaticResource CardText}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>
