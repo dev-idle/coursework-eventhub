@@ -119,6 +119,24 @@
         <item name="drawableTint">?attr/colorOnSurfaceVariant</item>
     </style>
 
+    <!-- A menu item with a switch at its end, 44 by 26dp to sit with the text and icons -->
+    <style name="Widget.EventHubAdmin.MenuSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="android:background">@null</item>
+        <item name="android:drawablePadding">@dimen/space_medium</item>
+        <item name="android:drawableTint">?attr/colorOnSurfaceVariant</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:paddingStart">@dimen/space_medium</item>
+        <item name="android:paddingEnd">@dimen/space_medium</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:thumb">@drawable/bg_switch_thumb</item>
+        <item name="switchPadding">@dimen/menu_switch_padding</item>
+        <item name="track">@drawable/bg_switch_track</item>
+        <item name="trackDecoration">@drawable/bg_switch_track_outline</item>
+    </style>
+
     <!-- Each field keeps a line for its message, so an error does not move the form. -->
     <style name="Widget.EventHubAdmin.TextField"
         parent="Widget.Material3.TextInputLayout.OutlinedBox">

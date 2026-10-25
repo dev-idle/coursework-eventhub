@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Saves events in SQLite, as the module brief's database helper does.
+ * Saves events in SQLite, as the module brief's database helper does, and syncs each change.
  */
 public class EventDatabase extends SQLiteOpenHelper {
 
@@ -93,8 +93,11 @@ public class EventDatabase extends SQLiteOpenHelper {
             + "WHERE Status = ? AND (CASE WHEN EndTime > StartTime THEN Date "
             + "ELSE date(Date, '+1 day') END) || ' ' || EndTime <= ?";
 
+    private final Context context;
+
     public EventDatabase(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context.getApplicationContext();
     }
 
     @Override
@@ -133,7 +136,9 @@ public class EventDatabase extends SQLiteOpenHelper {
     public long insertEvent(Event event) {
         try (SQLiteStatement statement = getWritableDatabase().compileStatement(INSERT)) {
             bindDetails(statement, event);
-            return statement.executeInsert();
+            long id = statement.executeInsert();
+            CloudSync.syncChanges(context);
+            return id;
         }
     }
 
@@ -144,6 +149,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(12, event.getId());
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Deletes the event with this ID. */
@@ -152,6 +158,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(1, id);
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Deletes these events in one transaction, so either all of them go or none do. */
@@ -167,6 +174,7 @@ public class EventDatabase extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Saves deleted events and their sessions again under their IDs, in one transaction. */
@@ -190,6 +198,7 @@ public class EventDatabase extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Marks upcoming events that have ended by the given time as completed. */
@@ -200,7 +209,10 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindString(2, EventStatus.UPCOMING.name());
             statement.bindString(3,
                     now.toLocalDate() + " " + EventTimes.format(now.toLocalTime()));
-            statement.executeUpdateDelete();
+            // Runs each time the list shows, so it syncs only when an event changed.
+            if (statement.executeUpdateDelete() > 0) {
+                CloudSync.syncChanges(context);
+            }
         }
     }
 
@@ -254,7 +266,9 @@ public class EventDatabase extends SQLiteOpenHelper {
     public long insertSession(Session session) {
         try (SQLiteStatement statement = getWritableDatabase().compileStatement(INSERT_SESSION)) {
             bindSessionDetails(statement, session);
-            return statement.executeInsert();
+            long id = statement.executeInsert();
+            CloudSync.syncChanges(context);
+            return id;
         }
     }
 
@@ -265,6 +279,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(9, session.getId());
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Deletes the session with this ID. */
@@ -273,6 +288,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(1, id);
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Saves a deleted session again under its ID, to undo a delete. */
@@ -283,6 +299,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(9, session.getId());
             statement.executeInsert();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Returns the saved session with this ID, or null if there is none. */

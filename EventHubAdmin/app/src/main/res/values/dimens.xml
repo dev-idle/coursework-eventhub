@@ -17,6 +17,7 @@
 
     <!-- Moves the More options button toward the edge, so its dots end on the 16dp keyline -->
     <dimen name="more_button_shift">6dp</dimen>
+    <dimen name="menu_switch_padding">16dp</dimen>
 
     <dimen name="card_date_panel_width">64dp</dimen>
     <dimen name="card_corner_radius">16dp</dimen>

@@ -110,6 +110,10 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         toolbar.setNavigationOnClickListener(v -> stopSelection());
         getOnBackPressedDispatcher().addCallback(this, selectionCallback);
         database = new EventDatabase(this);
+        if (savedInstanceState == null) {
+            // Sends any change that had not reached the cloud when the app last closed.
+            CloudSync.syncChanges(this);
+        }
         adapter = new EventAdapter(this);
         GridLayoutManager layoutManager = new GridLayoutManager(this,
                 getResources().getInteger(R.integer.event_list_columns));
@@ -314,6 +318,8 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         }
         items.add(new MoreMenu.Item(R.layout.item_menu_upload, R.string.menu_upload,
                 this::uploadEvents));
+        items.add(new MoreMenu.Item(R.layout.item_menu_sync, R.string.menu_sync,
+                CloudSync.isAutoSync(this), on -> CloudSync.setAutoSync(this, on)));
         moreMenu = MoreMenu.show(this, anchor, items.toArray(new MoreMenu.Item[0]));
     }
 

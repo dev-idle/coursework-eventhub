@@ -1,9 +1,12 @@
 package com.comp1786.coursework.eventhub.admin;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -22,6 +25,8 @@ import java.util.concurrent.Executors;
 public final class CloudSync {
 
     private static final String TAG = "CloudSync";
+    private static final String PREFERENCES = "cloud_sync";
+    private static final String KEY_AUTO_SYNC = "auto_sync";
 
     // One thread, so uploads run in turn and the last one sent has the latest events.
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -47,13 +52,30 @@ public final class CloudSync {
                 && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
+    public static boolean isAutoSync(Context context) {
+        return preferences(context).getBoolean(KEY_AUTO_SYNC, true);
+    }
+
+    /** Turns automatic sync on or off, uploading at once when it comes on. */
+    public static void setAutoSync(Context context, boolean autoSync) {
+        preferences(context).edit().putBoolean(KEY_AUTO_SYNC, autoSync).apply();
+        syncChanges(context);
+    }
+
     /** Uploads every saved event at once and tells the listener how it went. */
     public static void upload(Context context, UploadListener listener) {
         send(context.getApplicationContext(), listener);
     }
 
+    /** Uploads every saved event after a change, if automatic sync is on. */
+    public static void syncChanges(Context context) {
+        if (isAutoSync(context)) {
+            send(context.getApplicationContext(), null);
+        }
+    }
+
     /** Reads the events on the upload thread, then writes them over the cloud copy. */
-    private static void send(Context context, UploadListener listener) {
+    private static void send(Context context, @Nullable UploadListener listener) {
         executor.execute(() -> {
             Map<String, Object> events = readEvents(context);
             Task<Void> write;
@@ -66,10 +88,14 @@ public final class CloudSync {
             }
             write.addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    listener.onUploaded(events.size());
+                    if (listener != null) {
+                        listener.onUploaded(events.size());
+                    }
                 } else {
                     Log.w(TAG, "Upload failed", task.getException());
-                    listener.onFailed();
+                    if (listener != null) {
+                        listener.onFailed();
+                    }
                 }
             });
         });
@@ -128,5 +154,9 @@ public final class CloudSync {
         values.put("room", session.getRoom());
         values.put("description", session.getDescription());
         return values;
+    }
+
+    private static SharedPreferences preferences(Context context) {
+        return context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
     }
 }

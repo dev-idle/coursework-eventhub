@@ -6,11 +6,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.StringRes;
 import androidx.appcompat.widget.ListPopupWindow;
+
+import java.util.function.Consumer;
 
 /**
  * Opens a menu under its button, only as wide as its widest item, unlike the overflow menu.
@@ -31,8 +34,15 @@ public final class MoreMenu {
         menu.setContentWidth(adapter.widestItem(anchor));
         menu.setModal(true);
         menu.setOnItemClickListener((parent, view, position, id) -> {
-            menu.dismiss();
-            items[position].onClick.run();
+            Item item = items[position];
+            if (view instanceof CompoundButton) {
+                // A switch keeps the menu open, so its change is seen.
+                item.onClick.run();
+                ((CompoundButton) view).setChecked(item.checked);
+            } else {
+                menu.dismiss();
+                item.onClick.run();
+            }
         });
         menu.show();
         return menu;
@@ -46,11 +56,25 @@ public final class MoreMenu {
         @StringRes
         private final int titleRes;
         private final Runnable onClick;
+        // Kept for an item with a switch, as the list may show the item again.
+        private boolean checked;
 
         public Item(@LayoutRes int layoutRes, @StringRes int titleRes, Runnable onClick) {
             this.layoutRes = layoutRes;
             this.titleRes = titleRes;
             this.onClick = onClick;
+        }
+
+        /** Makes an item whose layout is a switch, which passes each new state on. */
+        public Item(@LayoutRes int layoutRes, @StringRes int titleRes, boolean checked,
+                Consumer<Boolean> onCheckedChange) {
+            this.layoutRes = layoutRes;
+            this.titleRes = titleRes;
+            this.checked = checked;
+            onClick = () -> {
+                this.checked = !this.checked;
+                onCheckedChange.accept(this.checked);
+            };
         }
     }
 
@@ -95,6 +119,9 @@ public final class MoreMenu {
                     : (TextView) LayoutInflater.from(parent.getContext())
                             .inflate(items[position].layoutRes, parent, false);
             view.setText(items[position].titleRes);
+            if (view instanceof CompoundButton) {
+                ((CompoundButton) view).setChecked(items[position].checked);
+            }
             return view;
         }
 

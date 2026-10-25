@@ -205,6 +205,7 @@
 
     <!-- Uploading the events to the cloud -->
     <string name="menu_upload">Upload to cloud</string>
+    <string name="menu_sync">Sync automatically</string>
     <plurals name="message_events_uploaded">
         <item quantity="one">%d event uploaded</item>
         <item quantity="other">%d events uploaded</item>
