@@ -66,6 +66,11 @@ public final class Session implements Serializable {
         return startTime.isBefore(event.getStartTime()) ? start.plusDays(1) : start;
     }
 
+    /** Returns when the session ends, on the day after it starts if it runs past midnight. */
+    public LocalDateTime getEnd(Event event) {
+        return EventTimes.endOn(getStart(event).toLocalDate(), startTime, endTime);
+    }
+
     public SessionType getType() {
         return type;
     }

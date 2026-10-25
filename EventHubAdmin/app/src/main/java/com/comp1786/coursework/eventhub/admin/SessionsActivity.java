@@ -4,15 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,15 +17,14 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.divider.MaterialDividerItemDecoration;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Lists an event's sessions in the order they take place, to add, view, edit or delete them.
+ * Lists an event's sessions in the order they take place, to add one or open one in full.
  */
 public class SessionsActivity extends AppCompatActivity
         implements SessionAdapter.OnSessionClickListener {
@@ -36,10 +32,7 @@ public class SessionsActivity extends AppCompatActivity
     /** Extra with the ID of the event whose sessions to show. */
     public static final String EXTRA_EVENT_ID = "event_id";
 
-    private static final String STATE_SESSION_TO_DELETE = "session_to_delete";
-
     private MaterialToolbar toolbar;
-    private TextView eventText;
     private RecyclerView sessionList;
     private View emptyView;
     private ExtendedFloatingActionButton addButton;
@@ -48,24 +41,23 @@ public class SessionsActivity extends AppCompatActivity
     private SessionAdapter adapter;
     private long eventId;
     private Event event;
-    private AlertDialog deleteDialog;
-    // The session the delete dialog asks about, kept so the dialog survives rotation.
-    @Nullable
-    private Session sessionToDelete;
     // Set while another screen opens, so a quick second tap does not open it twice.
     private boolean opening;
 
-    // onStart has already shown the saved session when these results arrive.
+    // onStart has already shown the list as saved when these results arrive.
     private final ActivityResultLauncher<Intent> addSessionLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
                     showSavedMessage(R.string.message_session_added);
                 }
             });
-    private final ActivityResultLauncher<Intent> editSessionLauncher = registerForActivityResult(
+    private final ActivityResultLauncher<Intent> detailsLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    showSavedMessage(R.string.message_session_updated);
+                Intent data = result.getData();
+                if (result.getResultCode() == SessionDetailsActivity.RESULT_DELETED
+                        && data != null) {
+                    showDeletedSession(data.getSerializableExtra(
+                            SessionDetailsActivity.EXTRA_SESSION, Session.class));
                 }
             });
 
@@ -91,14 +83,6 @@ public class SessionsActivity extends AppCompatActivity
         eventId = getIntent().getLongExtra(EXTRA_EVENT_ID, Event.NO_ID);
         adapter = new SessionAdapter(this);
         sessionList.setAdapter(adapter);
-        MaterialDividerItemDecoration divider = new MaterialDividerItemDecoration(
-                this, MaterialDividerItemDecoration.VERTICAL);
-        // On the screen keyline, like the dividers on the details screen.
-        int keyline = getResources().getDimensionPixelSize(R.dimen.screen_padding);
-        divider.setDividerInsetStart(keyline);
-        divider.setDividerInsetEnd(keyline);
-        divider.setLastItemDecorated(false);
-        sessionList.addItemDecoration(divider);
 
         // Shrinks to the icon while scrolling down, so it covers less of the list.
         sessionList.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -111,18 +95,7 @@ public class SessionsActivity extends AppCompatActivity
                 }
             }
         });
-        addButton.setOnClickListener(v -> openSession(null));
-        getSupportFragmentManager().setFragmentResultListener(SessionDetailsSheet.REQUEST_KEY,
-                this, (key, result) -> {
-                    Session session = result.getSerializable(
-                            SessionDetailsSheet.RESULT_SESSION, Session.class);
-                    if (SessionDetailsSheet.ACTION_EDIT.equals(
-                            result.getString(SessionDetailsSheet.RESULT_ACTION))) {
-                        openSession(session);
-                    } else {
-                        showDeleteDialog(session);
-                    }
-                });
+        addButton.setOnClickListener(v -> openAddSession());
     }
 
     @Override
@@ -134,41 +107,19 @@ public class SessionsActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (deleteDialog != null && deleteDialog.isShowing()) {
-            outState.putSerializable(STATE_SESSION_TO_DELETE, sessionToDelete);
-        }
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        Session session =
-                savedInstanceState.getSerializable(STATE_SESSION_TO_DELETE, Session.class);
-        if (session != null) {
-            showDeleteDialog(session);
-        }
-    }
-
-    @Override
     protected void onDestroy() {
-        if (deleteDialog != null) {
-            deleteDialog.dismiss();
-        }
         database.close();
         super.onDestroy();
     }
 
     @Override
     public void onSessionClick(Session session) {
-        // A quick second tap would otherwise open a second sheet.
-        if (getSupportFragmentManager().findFragmentByTag(SessionDetailsSheet.REQUEST_KEY)
-                != null) {
+        if (opening) {
             return;
         }
-        SessionDetailsSheet.newInstance(event, session)
-                .show(getSupportFragmentManager(), SessionDetailsSheet.REQUEST_KEY);
+        opening = true;
+        detailsLauncher.launch(new Intent(SessionsActivity.this, SessionDetailsActivity.class)
+                .putExtra(SessionDetailsActivity.EXTRA_SESSION_ID, session.getId()));
     }
 
     /** Keeps the list end and the Add session button above the navigation bar. */
@@ -189,42 +140,18 @@ public class SessionsActivity extends AppCompatActivity
 
     private void bindViews() {
         toolbar = findViewById(R.id.toolbar);
-        eventText = findViewById(R.id.event_text);
         sessionList = findViewById(R.id.session_list);
         emptyView = findViewById(R.id.empty_view);
         addButton = findViewById(R.id.add_button);
     }
 
-    /** Opens the form for a new session, or for editing this one. */
-    private void openSession(@Nullable Session session) {
+    private void openAddSession() {
         if (opening) {
             return;
         }
         opening = true;
-        Intent intent = new Intent(SessionsActivity.this, AddEditSessionActivity.class)
-                .putExtra(AddEditSessionActivity.EXTRA_EVENT, event);
-        if (session == null) {
-            addSessionLauncher.launch(intent);
-        } else {
-            editSessionLauncher.launch(
-                    intent.putExtra(AddEditSessionActivity.EXTRA_SESSION, session));
-        }
-    }
-
-    /** Asks before deleting the session, which Undo can then bring back. */
-    private void showDeleteDialog(Session session) {
-        sessionToDelete = session;
-        deleteDialog = new MaterialAlertDialogBuilder(this,
-                R.style.ThemeOverlay_EventHubAdmin_DestructiveDialog)
-                .setTitle(R.string.delete_session_title)
-                .setMessage(getString(R.string.delete_session_message, session.getName()))
-                .setNegativeButton(R.string.button_cancel, null)
-                .setPositiveButton(R.string.button_delete, (dialog, which) -> {
-                    database.deleteSession(session.getId());
-                    showSessions();
-                    showDeletedSession(session);
-                })
-                .show();
+        addSessionLauncher.launch(new Intent(SessionsActivity.this, AddEditSessionActivity.class)
+                .putExtra(AddEditSessionActivity.EXTRA_EVENT, event));
     }
 
     /** Confirms that a session was deleted, with an action that saves it again. */
@@ -253,10 +180,9 @@ public class SessionsActivity extends AppCompatActivity
             finish();
             return;
         }
-        eventText.setText(getString(R.string.session_event, event.getName(),
-                EventTimes.format(event.getStartTime()), EventTimes.format(event.getEndTime())));
+        toolbar.setSubtitle(event.getName());
         List<Session> sessions = database.getSessions(event);
-        adapter.setSessions(event, sessions);
+        adapter.setSessions(event, sessions, LocalDateTime.now());
         emptyView.setVisibility(sessions.isEmpty() ? View.VISIBLE : View.GONE);
         if (sessions.isEmpty()) {
             // The button may still be shrunk from scrolling, and the empty state needs its label.

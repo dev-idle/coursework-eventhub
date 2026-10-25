@@ -18,7 +18,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * Where an event is in time, or that it was cancelled, with the colors and text that show it.
+ * Where an event or session is in time, or that it was cancelled, with the colors and text
+ * that show it.
  */
 public enum EventCardState {
 
@@ -90,6 +91,36 @@ public enum EventCardState {
             return LIVE;
         }
         return event.getStart().equals(nextStart) ? NEXT : UPCOMING;
+    }
+
+    /** Returns when an event's next sessions start, as nextStart does for events. */
+    @Nullable
+    public static LocalDateTime nextStart(Event event, List<Session> sessions,
+            LocalDateTime now) {
+        LocalDateTime nextStart = null;
+        for (Session session : sessions) {
+            EventCardState state = at(event, session, now, null);
+            if (state == LIVE) {
+                return null;
+            } else if (state == UPCOMING
+                    && (nextStart == null || session.getStart(event).isBefore(nextStart))) {
+                nextStart = session.getStart(event);
+            }
+        }
+        return nextStart;
+    }
+
+    /** Returns the state of a session, which is cancelled along with its event. */
+    public static EventCardState at(Event event, Session session, LocalDateTime now,
+            @Nullable LocalDateTime nextStart) {
+        if (event.getStatus() == EventStatus.CANCELLED) {
+            return CANCELLED;
+        } else if (!session.getEnd(event).isAfter(now)) {
+            return PAST;
+        } else if (!session.getStart(event).isAfter(now)) {
+            return LIVE;
+        }
+        return session.getStart(event).equals(nextStart) ? NEXT : UPCOMING;
     }
 
     /** Returns the days from today to the day the status counts to, negative once past. */
