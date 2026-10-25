@@ -203,6 +203,16 @@
     <!-- A session time after midnight, as TalkBack reads it -->
     <string name="time_next_day">%1$s the next day</string>
 
+    <!-- Uploading the events to the cloud -->
+    <string name="menu_upload">Upload to cloud</string>
+    <plurals name="message_events_uploaded">
+        <item quantity="one">%d event uploaded</item>
+        <item quantity="other">%d events uploaded</item>
+    </plurals>
+    <string name="message_offline">No internet connection. Connect and try again.</string>
+    <string name="message_upload_failed">Couldn’t upload the events</string>
+    <string name="button_retry">Retry</string>
+
     <!-- Session types from the coursework brief -->
     <string name="session_type_workshop">Workshop</string>
     <string name="session_type_presentation">Presentation</string>

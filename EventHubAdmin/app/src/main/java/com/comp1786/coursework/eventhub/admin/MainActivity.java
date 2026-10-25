@@ -35,6 +35,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -68,8 +69,6 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     private ListPopupWindow moreMenu;
     @Nullable
     private MenuItem searchItem;
-    @Nullable
-    private MenuItem moreItem;
     // Set while another screen opens, so a quick second tap does not open it twice.
     private boolean opening;
 
@@ -200,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         getMenuInflater().inflate(
                 adapter.isSelecting() ? R.menu.menu_selection : R.menu.menu_main, menu);
         searchItem = menu.findItem(R.id.action_search);
-        moreItem = menu.findItem(R.id.action_more);
+        MenuItem moreItem = menu.findItem(R.id.action_more);
         if (searchItem != null) {
             setUpSearch(searchItem);
         }
@@ -235,8 +234,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_more) {
-            moreMenu = MoreMenu.show(this, item.getActionView(), new MoreMenu.Item(
-                    R.layout.item_menu_select, R.string.menu_select_events, this::startSelection));
+            showMoreMenu(item.getActionView());
             return true;
         } else if (id == R.id.action_select_all) {
             if (adapter.isAllSelected()) {
@@ -300,14 +298,49 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         addButton = findViewById(R.id.add_button);
     }
 
-    /** Shows search with the filters while events are saved, and More while cards are shown. */
+    /** Shows search with the filters, while events are saved. */
     private void showAppBarButtons() {
         if (searchItem != null) {
             searchItem.setVisible(filterBar.getVisibility() == View.VISIBLE);
         }
-        if (moreItem != null) {
-            moreItem.setVisible(adapter.getItemCount() > 0);
+    }
+
+    /** Opens More, which offers selecting only while cards are shown. */
+    private void showMoreMenu(View anchor) {
+        List<MoreMenu.Item> items = new ArrayList<>();
+        if (adapter.getItemCount() > 0) {
+            items.add(new MoreMenu.Item(R.layout.item_menu_select, R.string.menu_select_events,
+                    this::startSelection));
         }
+        items.add(new MoreMenu.Item(R.layout.item_menu_upload, R.string.menu_upload,
+                this::uploadEvents));
+        moreMenu = MoreMenu.show(this, anchor, items.toArray(new MoreMenu.Item[0]));
+    }
+
+    /** Uploads every saved event at once, after checking that the device is online. */
+    private void uploadEvents() {
+        if (!CloudSync.isOnline(this)) {
+            IconSnackbar.make(eventList, getString(R.string.message_offline),
+                    R.drawable.ic_cloud_off, Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        CloudSync.upload(this, new CloudSync.UploadListener() {
+            @Override
+            public void onUploaded(int count) {
+                String message = getResources().getQuantityString(
+                        R.plurals.message_events_uploaded, count, count);
+                IconSnackbar.make(eventList, message, R.drawable.ic_cloud_done,
+                        Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailed() {
+                IconSnackbar.make(eventList, getString(R.string.message_upload_failed),
+                        R.drawable.ic_cloud_off, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.button_retry, v -> uploadEvents())
+                        .show();
+            }
+        });
     }
 
     /** Searches as the user types, and reopens the search the list is still narrowed to. */

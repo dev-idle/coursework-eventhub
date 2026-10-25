@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "events": {
+      ".read": true,
+      ".write": "auth != null",
+      "$eventId": {
+        ".validate": "$eventId.matches(/^e[0-9]+$/) && newData.hasChildren(['name', 'date', 'startTime', 'endTime', 'location', 'organizer', 'type', 'status'])",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+        "date": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+        "startTime": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{2}:[0-9]{2}$/)" },
+        "endTime": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{2}:[0-9]{2}$/)" },
+        "location": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+        "organizer": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+        "type": { ".validate": "newData.isString() && newData.val().matches(/^(CONFERENCE|WORKSHOP|SEMINAR|SOCIAL|OTHER)$/)" },
+        "status": { ".validate": "newData.isString() && newData.val().matches(/^(UPCOMING|COMPLETED|CANCELLED)$/)" },
+        "description": { ".validate": "newData.isString() && newData.val().length <= 500" },
+        "contactEmail": { ".validate": "newData.isString() && newData.val().length <= 254" },
+        "contactPhone": { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "sessions": {
+          "$sessionId": {
+            ".validate": "$sessionId.matches(/^s[0-9]+$/) && newData.hasChildren(['name', 'startTime', 'endTime', 'type'])",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+            "startTime": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{2}:[0-9]{2}$/)" },
+            "endTime": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{2}:[0-9]{2}$/)" },
+            "type": { ".validate": "newData.isString() && newData.val().matches(/^(WORKSHOP|PRESENTATION|PANEL_DISCUSSION|NETWORKING|KEYNOTE|OTHER)$/)" },
+            "speaker": { ".validate": "newData.isString() && newData.val().length <= 100" },
+            "room": { ".validate": "newData.isString() && newData.val().length <= 100" },
+            "description": { ".validate": "newData.isString() && newData.val().length <= 500" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
