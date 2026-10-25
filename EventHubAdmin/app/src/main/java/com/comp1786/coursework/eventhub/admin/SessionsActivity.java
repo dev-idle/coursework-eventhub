@@ -2,15 +2,20 @@ package com.comp1786.coursework.eventhub.admin;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -32,15 +37,23 @@ public class SessionsActivity extends AppCompatActivity
     /** Extra with the ID of the event whose sessions to show. */
     public static final String EXTRA_EVENT_ID = "event_id";
 
+    private static final String STATE_QUERY = "query";
+
     private MaterialToolbar toolbar;
     private RecyclerView sessionList;
     private View emptyView;
+    private TextView emptyTitle;
+    private TextView emptyMessage;
     private ExtendedFloatingActionButton addButton;
 
     private EventDatabase database;
     private SessionAdapter adapter;
     private long eventId;
     private Event event;
+    // The text the sessions are searched for, kept across rotation.
+    private String query = "";
+    @Nullable
+    private MenuItem searchItem;
     // Set while another screen opens, so a quick second tap does not open it twice.
     private boolean opening;
 
@@ -48,6 +61,10 @@ public class SessionsActivity extends AppCompatActivity
     private final ActivityResultLauncher<Intent> addSessionLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
+                    // The new session may not match the search, so every session is shown.
+                    if (searchItem != null) {
+                        searchItem.collapseActionView();
+                    }
                     showSavedMessage(R.string.message_session_added);
                 }
             });
@@ -81,6 +98,7 @@ public class SessionsActivity extends AppCompatActivity
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         database = new EventDatabase(this);
         eventId = getIntent().getLongExtra(EXTRA_EVENT_ID, Event.NO_ID);
+        query = savedInstanceState == null ? "" : savedInstanceState.getString(STATE_QUERY, "");
         adapter = new SessionAdapter(this);
         sessionList.setAdapter(adapter);
 
@@ -107,9 +125,54 @@ public class SessionsActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_QUERY, query);
+    }
+
+    @Override
     protected void onDestroy() {
         database.close();
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_sessions, menu);
+        searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setQueryHint(getString(R.string.hint_search_sessions));
+        searchView.setMaxWidth(Integer.MAX_VALUE);
+        // After rotation, the field shows the text searched for.
+        if (!query.isEmpty()) {
+            searchItem.expandActionView();
+            searchView.setQuery(query, false);
+            searchView.clearFocus();
+        }
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String text) {
+                searchView.clearFocus();
+                return true;
+            }
+
+            // Also called with no text as the field closes.
+            @Override
+            public boolean onQueryTextChange(String text) {
+                query = text.trim();
+                showSessions();
+                return true;
+            }
+        });
+        showSearchButton();
+        return true;
+    }
+
+    /** Hides search while the event has no sessions to search. */
+    private void showSearchButton() {
+        if (searchItem != null) {
+            searchItem.setVisible(!query.isEmpty() || adapter.getItemCount() > 0);
+        }
     }
 
     @Override
@@ -142,6 +205,8 @@ public class SessionsActivity extends AppCompatActivity
         toolbar = findViewById(R.id.toolbar);
         sessionList = findViewById(R.id.session_list);
         emptyView = findViewById(R.id.empty_view);
+        emptyTitle = findViewById(R.id.empty_title);
+        emptyMessage = findViewById(R.id.empty_message);
         addButton = findViewById(R.id.add_button);
     }
 
@@ -173,7 +238,7 @@ public class SessionsActivity extends AppCompatActivity
                 Snackbar.LENGTH_SHORT).show();
     }
 
-    /** Shows the event's sessions, or the empty state if it has none. */
+    /** Shows the event's sessions that match the search, or the empty state if none do. */
     private void showSessions() {
         event = database.getEvent(eventId);
         if (event == null) {
@@ -181,9 +246,14 @@ public class SessionsActivity extends AppCompatActivity
             return;
         }
         toolbar.setSubtitle(event.getName());
-        List<Session> sessions = database.getSessions(event);
+        List<Session> sessions = database.getSessions(event, query);
         adapter.setSessions(event, sessions, LocalDateTime.now());
+        showSearchButton();
         emptyView.setVisibility(sessions.isEmpty() ? View.VISIBLE : View.GONE);
+        emptyTitle.setText(
+                query.isEmpty() ? R.string.sessions_empty : R.string.sessions_empty_search);
+        emptyMessage.setText(
+                query.isEmpty() ? R.string.sessions_empty_message : R.string.empty_search_message);
         if (sessions.isEmpty()) {
             // The button may still be shrunk from scrolling, and the empty state needs its label.
             addButton.extend();

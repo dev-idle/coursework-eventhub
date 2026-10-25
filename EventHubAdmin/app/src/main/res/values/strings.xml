@@ -171,6 +171,8 @@
     <string name="button_save_session">Save session</string>
     <string name="sessions_empty">No sessions yet</string>
     <string name="sessions_empty_message">Sessions you add appear here.</string>
+    <string name="sessions_empty_search">No matching sessions</string>
+    <string name="hint_search_sessions">Search sessions</string>
     <!-- The next session to start, such as "Next: 09:00 Opening keynote" -->
     <string name="next_session">Next: %1$s %2$s</string>
     <!-- The event's hours, under a session's start time -->

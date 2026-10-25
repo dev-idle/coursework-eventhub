@@ -84,8 +84,7 @@ public class EventDatabase extends SQLiteOpenHelper {
     private static final String SELECT_SESSION = "SELECT ID, EventID, Name, StartTime, "
             + "EndTime, Type, Speaker, Room, Description FROM Session ";
     // Sessions that start before the event's start time are on the next day, so they go last.
-    private static final String SELECT_SESSIONS = SELECT_SESSION
-            + "WHERE EventID = ? ORDER BY StartTime < ?, StartTime, ID";
+    private static final String SESSION_ORDER = "ORDER BY StartTime < ?, StartTime, ID";
     private static final String SELECT_SESSION_BY_ID = SELECT_SESSION + "WHERE ID = ?";
     private static final String COUNT_SESSIONS =
             "SELECT EventID, COUNT(*) FROM Session GROUP BY EventID";
@@ -297,9 +296,25 @@ public class EventDatabase extends SQLiteOpenHelper {
 
     /** Returns the sessions of an event in the order they take place. */
     public List<Session> getSessions(Event event) {
+        return getSessions(event, "");
+    }
+
+    /** Returns an event's sessions where a word in the name or description starts with text. */
+    public List<Session> getSessions(Event event, String text) {
+        List<String> conditions = new ArrayList<>();
+        List<String> args = new ArrayList<>();
+        conditions.add("EventID = ?");
+        args.add(String.valueOf(event.getId()));
+        if (!text.isEmpty()) {
+            addWordStart(conditions, args, text, "Name", "Description");
+        }
+        // Bound last, as the order comes after the conditions.
+        args.add(EventTimes.format(event.getStartTime()));
+        String query = SELECT_SESSION + "WHERE " + String.join(" AND ", conditions) + " "
+                + SESSION_ORDER;
         List<Session> sessions = new ArrayList<>();
-        try (Cursor cursor = getReadableDatabase().rawQuery(SELECT_SESSIONS, new String[] {
-                String.valueOf(event.getId()), EventTimes.format(event.getStartTime())})) {
+        try (Cursor cursor = getReadableDatabase()
+                .rawQuery(query, args.toArray(new String[0]))) {
             while (cursor.moveToNext()) {
                 sessions.add(readSession(cursor));
             }
