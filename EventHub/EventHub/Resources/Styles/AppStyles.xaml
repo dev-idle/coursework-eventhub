@@ -77,12 +77,17 @@
         <Setter Property="VerticalOptions" Value="Fill" />
     </Style>
 
-    <!-- Marks a favorite event on its card -->
+    <!-- The star in a card's corner, with a touch area of 48 by 48 -->
+    <Style x:Key="CardStarButton" TargetType="Grid">
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="Start" />
+        <Setter Property="WidthRequest" Value="48" />
+    </Style>
+
+    <!-- Marks a favorite event -->
     <Style x:Key="FavoriteStar" TargetType="Path" BasedOn="{StaticResource Icon}">
         <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="HeightRequest" Value="20" />
-        <Setter Property="VerticalOptions" Value="Start" />
-        <Setter Property="WidthRequest" Value="20" />
     </Style>
 
     <!-- A line of news above the list, such as being offline -->

@@ -184,6 +184,21 @@ namespace EventHub
             }
         }
 
+        private void OnStarTapped(object? sender, TappedEventArgs e)
+        {
+            if ((sender as BindableObject)?.BindingContext is EventCard card)
+            {
+                card.IsFavorite = favorites.ToggleEvent(card.Event);
+                favoriteKeys = favorites.GetKeys();
+                SemanticScreenReader.Announce(card.IsFavorite ? "Added to favorites" : "Removed from favorites");
+                if (favoritesOnly)
+                {
+                    // The event leaves the favorites shown
+                    ShowEvents();
+                }
+            }
+        }
+
         private void OnFavoritesChipTapped(object? sender, TappedEventArgs e)
         {
             favoritesOnly = !favoritesOnly;

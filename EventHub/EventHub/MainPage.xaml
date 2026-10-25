@@ -182,17 +182,12 @@
                                 </Grid>
 
                                 <VerticalStackLayout Grid.Column="1" Padding="16,12,16,16">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <Label Text="{Binding Name}"
-                                               Style="{StaticResource CardName}"
-                                               TextColor="{Binding TextColor}"
-                                               TextDecorations="{Binding NameDecorations}" />
-                                        <Path Grid.Column="1"
-                                              Data="{StaticResource IconStar}"
-                                              Style="{StaticResource FavoriteStar}"
-                                              IsVisible="{Binding IsFavorite}"
-                                              SemanticProperties.Description="Favorite" />
-                                    </Grid>
+                                    <!-- Kept clear of the star in the corner -->
+                                    <Label Text="{Binding Name}"
+                                           Style="{StaticResource CardName}"
+                                           Margin="0,0,32,0"
+                                           TextColor="{Binding TextColor}"
+                                           TextDecorations="{Binding NameDecorations}" />
 
                                     <HorizontalStackLayout Spacing="8" Margin="0,6,0,0">
                                         <Border Style="{StaticResource TypeLabel}"
@@ -241,6 +236,20 @@
                                         <Label Grid.Column="1" Text="{Binding SessionCount}" Style="{StaticResource CardDetail}" />
                                     </Grid>
                                 </VerticalStackLayout>
+                                <!-- Adds the event to the favorites, or takes it off, without opening it -->
+                                <Grid Grid.Column="1"
+                                      Style="{StaticResource CardStarButton}"
+                                      SemanticProperties.Description="{Binding FavoriteDescription}">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnStarTapped" />
+                                    </Grid.GestureRecognizers>
+                                    <Path Data="{StaticResource IconStarOutline}"
+                                          Style="{StaticResource Icon}"
+                                          IsVisible="{Binding IsNotFavorite}" />
+                                    <Path Data="{StaticResource IconStar}"
+                                          Style="{StaticResource FavoriteStar}"
+                                          IsVisible="{Binding IsFavorite}" />
+                                </Grid>
                             </Grid>
                         </Border>
                         <Ellipse Style="{StaticResource CardNotch}" VerticalOptions="Start" Margin="56,-8,0,0" />

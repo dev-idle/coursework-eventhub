@@ -40,6 +40,18 @@ namespace EventHub
             return events;
         }
 
+        // Adds the event to the favorites, or takes it off, and returns whether it is one now
+        public bool ToggleEvent(Event e)
+        {
+            if (IsFavorite(e.Key))
+            {
+                DeleteEvent(e.Key);
+                return false;
+            }
+            AddEvent(e);
+            return true;
+        }
+
         public void AddEvent(Event e)
         {
             database.InsertOrReplace(new Favorite { Key = e.Key, Data = JsonConvert.SerializeObject(e) });

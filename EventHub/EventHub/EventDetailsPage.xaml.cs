@@ -43,15 +43,7 @@ namespace EventHub
 
         private void OnFavoriteTapped(object? sender, TappedEventArgs e)
         {
-            if (isFavorite)
-            {
-                favorites.DeleteEvent(card.Event.Key);
-            }
-            else
-            {
-                favorites.AddEvent(card.Event);
-            }
-            isFavorite = !isFavorite;
+            isFavorite = favorites.ToggleEvent(card.Event);
             ShowFavorite();
             SemanticScreenReader.Announce(isFavorite ? "Added to favorites" : "Removed from favorites");
         }

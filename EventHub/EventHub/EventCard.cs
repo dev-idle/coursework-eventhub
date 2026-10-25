@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 
 namespace EventHub
@@ -13,17 +14,22 @@ namespace EventHub
     }
 
     // An event as its card shows it, worked out for the time the list was shown.
-    public class EventCard
+    public class EventCard : INotifyPropertyChanged
     {
         public static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-GB");
+
+        private bool isFavorite;
 
         public EventCard(Event e, CardState state, DateTime now, bool isFavorite)
         {
             Event = e;
             State = state;
             StatusText = GetStatusText(e, state, now.Date);
-            IsFavorite = isFavorite;
+            this.isFavorite = isFavorite;
         }
+
+        // Tells the card when its star is tapped, so that only the star changes
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public Event Event { get; }
 
@@ -31,7 +37,21 @@ namespace EventHub
 
         public string StatusText { get; }
 
-        public bool IsFavorite { get; }
+        public bool IsFavorite
+        {
+            get => isFavorite;
+            set
+            {
+                isFavorite = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFavorite)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNotFavorite)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FavoriteDescription)));
+            }
+        }
+
+        public bool IsNotFavorite => !isFavorite;
+
+        public string FavoriteDescription => isFavorite ? "Remove from favorites" : "Add to favorites";
 
         public string Name => Event.Name;
 
