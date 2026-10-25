@@ -46,6 +46,7 @@ namespace EventHub
             base.OnAppearing();
             opening = false;
             Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
+            Window.Resumed += OnWindowResumed;
             if (loaded)
             {
                 // The states and countdowns change as time passes
@@ -58,6 +59,7 @@ namespace EventHub
         {
             base.OnDisappearing();
             Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+            Window.Resumed -= OnWindowResumed;
 
             // Stop listening to Firebase when the page is closed
             subscription?.Dispose();
@@ -70,6 +72,15 @@ namespace EventHub
             {
                 GetEvents();
             }
+        }
+
+        // Android pauses an app in the background, which can end the stream without a word, so the
+        // events are read again and listened to afresh when the app comes back
+        private void OnWindowResumed(object? sender, EventArgs e)
+        {
+            subscription?.Dispose();
+            subscription = null;
+            GetEvents();
         }
 
         private void OnRetryClicked(object? sender, EventArgs e)
@@ -328,6 +339,11 @@ namespace EventHub
                 return;
             }
 
+            // The network can come back more than once, so another call may be listening already
+            if (subscription != null)
+            {
+                return;
+            }
             // The admin app writes every event at once, which the stream reports as inserts and
             // updates only, so each change is read again in full to drop deleted events too.
             subscription = firebaseClient.Child("events").AsObservable<Event>().Subscribe(
@@ -363,7 +379,8 @@ namespace EventHub
                 do
                 {
                     readAgain = false;
-                    var items = await firebaseClient.Child("events").OnceAsync<Event>();
+                    // Gives up on a read that hangs, as one can while the network comes back
+                    var items = await firebaseClient.Child("events").OnceAsync<Event>(TimeSpan.FromSeconds(15));
                     events.Clear();
                     foreach (var item in items)
                     {
