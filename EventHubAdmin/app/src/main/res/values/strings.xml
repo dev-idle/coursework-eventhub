@@ -226,6 +226,25 @@
     <string name="error_sign_in">Email or password is incorrect</string>
     <string name="message_sign_in_failed">Couldn’t sign in. Try again.</string>
 
+    <!-- An event's QR code, which a phone camera reads without the app -->
+    <string name="menu_show_qr_code">Show QR code</string>
+    <string name="description_qr_code">QR code of the event</string>
+    <string name="button_close">Close</string>
+    <string name="message_qr_code_too_long">Too many details for a QR code</string>
+    <!-- The text the code holds, such as "When: Friday 13 November 2026, 18:00–08:00" -->
+    <string name="qr_when">When: %1$s, %2$s</string>
+    <string name="qr_where">Where: %1$s</string>
+    <string name="qr_next_day">%1$s (next day)</string>
+    <string name="qr_sessions">Sessions (%1$d)</string>
+    <string name="qr_session">• %1$s %2$s</string>
+    <!-- Quoted so the leading spaces are kept -->
+    <string name="qr_session_details">"  %1$s"</string>
+    <string name="qr_organizer">Organizer: %1$s</string>
+    <string name="qr_email">Email: %1$s</string>
+    <string name="qr_phone">Phone: %1$s</string>
+    <!-- Quoted so the spaces around the dot are kept -->
+    <string name="qr_separator">" · "</string>
+
     <!-- Session types from the coursework brief -->
     <string name="session_type_workshop">Workshop</string>
     <string name="session_type_presentation">Presentation</string>

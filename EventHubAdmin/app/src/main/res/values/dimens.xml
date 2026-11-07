@@ -42,4 +42,6 @@
     <dimen name="type_label_padding_vertical">2dp</dimen>
 
     <dimen name="sign_in_icon_size">64dp</dimen>
+    <!-- Large enough for a phone to scan it off a computer screen -->
+    <dimen name="qr_code_size">280dp</dimen>
 </resources>
