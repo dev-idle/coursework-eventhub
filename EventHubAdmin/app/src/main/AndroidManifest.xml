@@ -27,6 +27,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".SignInActivity"
+            android:exported="false"
+            android:label="@string/title_sign_in"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".AddEditEventActivity"
             android:exported="false"
             android:label="@string/title_add_event"

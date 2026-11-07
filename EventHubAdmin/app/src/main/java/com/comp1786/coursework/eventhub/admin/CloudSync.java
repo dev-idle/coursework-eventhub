@@ -8,14 +8,10 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -78,36 +74,21 @@ public final class CloudSync {
     private static void send(Context context, @Nullable UploadListener listener) {
         executor.execute(() -> {
             Map<String, Object> events = readEvents(context);
-            Task<Void> write;
-            try {
-                // Waits here, so the next upload neither signs in again nor overtakes this one.
-                signIn();
-                write = FirebaseDatabase.getInstance().getReference("events").setValue(events);
-            } catch (ExecutionException | InterruptedException e) {
-                write = Tasks.forException(e);
-            }
-            write.addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    if (listener != null) {
-                        listener.onUploaded(events.size());
-                    }
-                } else {
-                    Log.w(TAG, "Upload failed", task.getException());
-                    if (listener != null) {
-                        listener.onFailed();
-                    }
-                }
-            });
+            // Firebase sends the signed-in admin's account, which the database rules check.
+            FirebaseDatabase.getInstance().getReference("events").setValue(events)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            if (listener != null) {
+                                listener.onUploaded(events.size());
+                            }
+                        } else {
+                            Log.w(TAG, "Upload failed", task.getException());
+                            if (listener != null) {
+                                listener.onFailed();
+                            }
+                        }
+                    });
         });
-    }
-
-    /** Signs in with an anonymous account, which the database rules ask for before a write. */
-    private static void signIn() throws ExecutionException, InterruptedException {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        // The account is kept between launches, so this signs in only once.
-        if (auth.getCurrentUser() == null) {
-            Tasks.await(auth.signInAnonymously());
-        }
     }
 
     /** Returns every saved event as the cloud stores it, each with its sessions, by key. */

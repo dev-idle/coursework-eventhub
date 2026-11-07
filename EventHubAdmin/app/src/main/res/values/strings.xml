@@ -214,6 +214,18 @@
     <string name="message_upload_failed">Couldn’t upload the events</string>
     <string name="button_retry">Retry</string>
 
+    <!-- Signing in, so only the admin can change the events in the cloud -->
+    <string name="title_sign_in">Sign in</string>
+    <string name="sign_in_message">Sign in to manage events</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Password</string>
+    <string name="button_sign_in">Sign in</string>
+    <string name="menu_sign_out">Sign out</string>
+    <string name="error_email_required">Enter your email address</string>
+    <string name="error_password_required">Enter your password</string>
+    <string name="error_sign_in">Email or password is incorrect</string>
+    <string name="message_sign_in_failed">Couldn’t sign in. Try again.</string>
+
     <!-- Session types from the coursework brief -->
     <string name="session_type_workshop">Workshop</string>
     <string name="session_type_presentation">Presentation</string>

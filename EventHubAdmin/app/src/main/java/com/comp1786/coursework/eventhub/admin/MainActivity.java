@@ -32,6 +32,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -93,6 +94,11 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!SignInActivity.isSignedIn()) {
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        }
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -195,7 +201,10 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         if (openMenu != null) {
             openMenu.dismiss();
         }
-        database.close();
+        // Not opened when the screen closes at once to ask for sign-in.
+        if (database != null) {
+            database.close();
+        }
         super.onDestroy();
     }
 
@@ -321,7 +330,16 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                 this::uploadEvents));
         items.add(new MoreMenu.Item(R.layout.item_menu_sync, R.string.menu_sync,
                 CloudSync.isAutoSync(this), on -> CloudSync.setAutoSync(this, on)));
+        items.add(new MoreMenu.Item(R.layout.item_menu_sign_out, R.string.menu_sign_out,
+                this::signOut));
         openMenu = MoreMenu.show(this, anchor, items.toArray(new MoreMenu.Item[0]));
+    }
+
+    /** Signs the admin out and returns to the sign-in screen; the saved events stay. */
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+        startActivity(new Intent(this, SignInActivity.class));
+        finish();
     }
 
     /** Uploads every saved event at once, after checking that the device is online. */
