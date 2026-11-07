@@ -221,6 +221,11 @@
         <Setter Property="VerticalTextAlignment" Value="Center" />
     </Style>
 
+    <!-- A detail that opens another app, colored as a link -->
+    <Style x:Key="DetailLink" TargetType="Label" BasedOn="{StaticResource DetailValue}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
     <Style x:Key="DetailSubtext" TargetType="Label">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />

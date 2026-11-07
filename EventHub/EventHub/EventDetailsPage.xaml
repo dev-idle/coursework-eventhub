@@ -63,14 +63,20 @@
                             <Path Data="{StaticResource IconPerson}" Style="{StaticResource Icon}" />
                             <Label x:Name="organizerLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
                         </Grid>
-                        <!-- The contact details are optional, so their rows hide when empty -->
-                        <Grid x:Name="emailRow" Style="{StaticResource DetailRow}">
+                        <!-- The contact details are optional, so their rows hide when empty, and open the email app or the dialer -->
+                        <Grid x:Name="emailRow" Style="{StaticResource DetailRow}" SemanticProperties.Hint="Opens your email app">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnEmailTapped" />
+                            </Grid.GestureRecognizers>
                             <Path Data="{StaticResource IconEmail}" Style="{StaticResource Icon}" />
-                            <Label x:Name="emailLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                            <Label x:Name="emailLabel" Grid.Column="1" Style="{StaticResource DetailLink}" />
                         </Grid>
-                        <Grid x:Name="phoneRow" Style="{StaticResource DetailRow}">
+                        <Grid x:Name="phoneRow" Style="{StaticResource DetailRow}" SemanticProperties.Hint="Opens the phone dialer">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPhoneTapped" />
+                            </Grid.GestureRecognizers>
                             <Path Data="{StaticResource IconPhone}" Style="{StaticResource Icon}" />
-                            <Label x:Name="phoneLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                            <Label x:Name="phoneLabel" Grid.Column="1" Style="{StaticResource DetailLink}" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

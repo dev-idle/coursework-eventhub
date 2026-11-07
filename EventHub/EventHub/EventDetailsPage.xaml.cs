@@ -65,6 +65,32 @@ namespace EventHub
             }
         }
 
+        // Opens the email app with the organizer's address filled in
+        private async void OnEmailTapped(object? sender, TappedEventArgs e)
+        {
+            if (Email.Default.IsComposeSupported)
+            {
+                await Email.Default.ComposeAsync(new EmailMessage { To = [card.Event.ContactEmail] });
+            }
+            else
+            {
+                await DisplayAlertAsync("No email app", "Install an email app to write to the organizer.", "OK");
+            }
+        }
+
+        // Opens the dialer with the number filled in, so the user decides to call
+        private async void OnPhoneTapped(object? sender, TappedEventArgs e)
+        {
+            if (PhoneDialer.Default.IsSupported)
+            {
+                PhoneDialer.Default.Open(card.Event.ContactPhone);
+            }
+            else
+            {
+                await DisplayAlertAsync("No phone app", "This device can't make phone calls.", "OK");
+            }
+        }
+
         private void ShowEvent()
         {
             Event shown = card.Event;
