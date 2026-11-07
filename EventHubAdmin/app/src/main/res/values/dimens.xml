@@ -17,6 +17,7 @@
 
     <!-- Moves the More options button toward the edge, so its dots end on the 16dp keyline -->
     <dimen name="more_button_shift">6dp</dimen>
+    <dimen name="menu_control_padding">16dp</dimen>
 
     <dimen name="card_date_panel_width">64dp</dimen>
     <dimen name="card_corner_radius">16dp</dimen>
@@ -28,6 +29,9 @@
     <dimen name="card_time_line_height">1dp</dimen>
 
     <!-- Material 3 list item leading icon -->
+    <!-- Keeps the three filters on one row, with a long organizer cut short. -->
+    <dimen name="filter_chip_max_width">160dp</dimen>
+
     <dimen name="detail_icon_size">24dp</dimen>
     <dimen name="detail_icon_margin">16dp</dimen>
     <dimen name="detail_row_min_height">56dp</dimen>
@@ -36,4 +40,8 @@
 
     <dimen name="type_label_padding_horizontal">8dp</dimen>
     <dimen name="type_label_padding_vertical">2dp</dimen>
+
+    <dimen name="sign_in_icon_size">64dp</dimen>
+    <!-- Large enough for a phone to scan it off a computer screen -->
+    <dimen name="qr_code_size">280dp</dimen>
 </resources>

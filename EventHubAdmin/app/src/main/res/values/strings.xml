@@ -9,23 +9,18 @@
         <item quantity="one">%d event</item>
         <item quantity="other">%d events</item>
     </plurals>
-    <!-- Shown while the list is filtered by status -->
-    <plurals name="event_count_upcoming">
-        <item quantity="one">%d upcoming event</item>
-        <item quantity="other">%d upcoming events</item>
-    </plurals>
-    <plurals name="event_count_completed">
-        <item quantity="one">%d completed event</item>
-        <item quantity="other">%d completed events</item>
-    </plurals>
-    <plurals name="event_count_cancelled">
-        <item quantity="one">%d cancelled event</item>
-        <item quantity="other">%d cancelled events</item>
-    </plurals>
-    <string name="empty_upcoming">No upcoming events</string>
-    <string name="empty_completed">No completed events</string>
-    <string name="empty_cancelled">No cancelled events</string>
-    <string name="empty_filtered_message">Tap the filter again to see every event.</string>
+    <string name="empty_filtered_title">No matching events</string>
+    <string name="empty_filtered_message">Clear a filter to see more events.</string>
+    <string name="empty_search_message">Check the spelling, or try fewer letters.</string>
+    <string name="menu_search">Search</string>
+    <string name="hint_search_events">Search events</string>
+    <string name="filter_date">Date</string>
+    <string name="filter_organizer">Organizer</string>
+    <string name="filter_status">Status</string>
+    <!-- Read out for a filter's clear button, such as "Clear date" -->
+    <string name="description_clear_date">Clear date</string>
+    <string name="description_clear_organizer">Clear organizer</string>
+    <string name="description_clear_status">Clear status</string>
     <!-- A card's status with when the event is, such as "Upcoming in 4 days" -->
     <string name="status_live">Happening now</string>
     <string name="status_upcoming_today">Upcoming today</string>
@@ -176,6 +171,8 @@
     <string name="button_save_session">Save session</string>
     <string name="sessions_empty">No sessions yet</string>
     <string name="sessions_empty_message">Sessions you add appear here.</string>
+    <string name="sessions_empty_search">No matching sessions</string>
+    <string name="hint_search_sessions">Search sessions</string>
     <!-- The next session to start, such as "Next: 09:00 Opening keynote" -->
     <string name="next_session">Next: %1$s %2$s</string>
     <!-- The event's hours, under a session's start time -->
@@ -205,6 +202,48 @@
     <string name="description_session">%1$s to %2$s, %3$s, %4$s, %5$s, %6$s</string>
     <!-- A session time after midnight, as TalkBack reads it -->
     <string name="time_next_day">%1$s the next day</string>
+
+    <!-- Uploading the events to the cloud -->
+    <string name="menu_upload">Upload to cloud</string>
+    <string name="menu_sync">Sync automatically</string>
+    <plurals name="message_events_uploaded">
+        <item quantity="one">%d event uploaded</item>
+        <item quantity="other">%d events uploaded</item>
+    </plurals>
+    <string name="message_offline">No internet connection. Connect and try again.</string>
+    <string name="message_upload_failed">Couldn’t upload the events</string>
+    <string name="button_retry">Retry</string>
+
+    <!-- Signing in, so only the admin can change the events in the cloud -->
+    <string name="title_sign_in">Sign in</string>
+    <string name="sign_in_message">Sign in to manage events</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Password</string>
+    <string name="button_sign_in">Sign in</string>
+    <string name="menu_sign_out">Sign out</string>
+    <string name="error_email_required">Enter your email address</string>
+    <string name="error_password_required">Enter your password</string>
+    <string name="error_sign_in">Email or password is incorrect</string>
+    <string name="message_sign_in_failed">Couldn’t sign in. Try again.</string>
+
+    <!-- An event's QR code, which a phone camera reads without the app -->
+    <string name="menu_show_qr_code">Show QR code</string>
+    <string name="description_qr_code">QR code of the event</string>
+    <string name="button_close">Close</string>
+    <string name="message_qr_code_too_long">Too many details for a QR code</string>
+    <!-- The text the code holds, such as "When: Friday 13 November 2026, 18:00–08:00" -->
+    <string name="qr_when">When: %1$s, %2$s</string>
+    <string name="qr_where">Where: %1$s</string>
+    <string name="qr_next_day">%1$s (next day)</string>
+    <string name="qr_sessions">Sessions (%1$d)</string>
+    <string name="qr_session">• %1$s %2$s</string>
+    <!-- Quoted so the leading spaces are kept -->
+    <string name="qr_session_details">"  %1$s"</string>
+    <string name="qr_organizer">Organizer: %1$s</string>
+    <string name="qr_email">Email: %1$s</string>
+    <string name="qr_phone">Phone: %1$s</string>
+    <!-- Quoted so the spaces around the dot are kept -->
+    <string name="qr_separator">" · "</string>
 
     <!-- Session types from the coursework brief -->
     <string name="session_type_workshop">Workshop</string>

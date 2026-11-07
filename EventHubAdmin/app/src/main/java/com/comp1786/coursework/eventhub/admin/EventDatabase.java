@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Saves events in SQLite, as the module brief's database helper does.
+ * Saves events in SQLite, as the module brief's database helper does, and syncs each change.
  */
 public class EventDatabase extends SQLiteOpenHelper {
 
@@ -53,9 +53,10 @@ public class EventDatabase extends SQLiteOpenHelper {
     private static final String SELECT = "SELECT ID, Name, Date, StartTime, EndTime, Location, "
             + "Organizer, Type, Status, Description, ContactEmail, ContactPhone FROM Event ";
     private static final String START_ORDER = "ORDER BY Date, StartTime, ID";
-    private static final String SELECT_ALL = SELECT + START_ORDER;
-    private static final String SELECT_BY_STATUS = SELECT + "WHERE Status = ? " + START_ORDER;
     private static final String SELECT_BY_ID = SELECT + "WHERE ID = ?";
+    // One of each organizer, however it was capitalized, in alphabetical order.
+    private static final String SELECT_ORGANIZERS = "SELECT Organizer FROM Event "
+            + "GROUP BY Organizer COLLATE NOCASE ORDER BY Organizer COLLATE NOCASE";
     // A session's times fall within its event, and the session is deleted with the event.
     private static final String CREATE_SESSION_TABLE = "CREATE TABLE Session ("
             + "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -83,8 +84,7 @@ public class EventDatabase extends SQLiteOpenHelper {
     private static final String SELECT_SESSION = "SELECT ID, EventID, Name, StartTime, "
             + "EndTime, Type, Speaker, Room, Description FROM Session ";
     // Sessions that start before the event's start time are on the next day, so they go last.
-    private static final String SELECT_SESSIONS = SELECT_SESSION
-            + "WHERE EventID = ? ORDER BY StartTime < ?, StartTime, ID";
+    private static final String SESSION_ORDER = "ORDER BY StartTime < ?, StartTime, ID";
     private static final String SELECT_SESSION_BY_ID = SELECT_SESSION + "WHERE ID = ?";
     private static final String COUNT_SESSIONS =
             "SELECT EventID, COUNT(*) FROM Session GROUP BY EventID";
@@ -93,8 +93,11 @@ public class EventDatabase extends SQLiteOpenHelper {
             + "WHERE Status = ? AND (CASE WHEN EndTime > StartTime THEN Date "
             + "ELSE date(Date, '+1 day') END) || ' ' || EndTime <= ?";
 
+    private final Context context;
+
     public EventDatabase(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context.getApplicationContext();
     }
 
     @Override
@@ -133,7 +136,9 @@ public class EventDatabase extends SQLiteOpenHelper {
     public long insertEvent(Event event) {
         try (SQLiteStatement statement = getWritableDatabase().compileStatement(INSERT)) {
             bindDetails(statement, event);
-            return statement.executeInsert();
+            long id = statement.executeInsert();
+            CloudSync.syncChanges(context);
+            return id;
         }
     }
 
@@ -144,6 +149,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(12, event.getId());
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Deletes the event with this ID. */
@@ -152,6 +158,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(1, id);
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Deletes these events in one transaction, so either all of them go or none do. */
@@ -167,6 +174,7 @@ public class EventDatabase extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Saves deleted events and their sessions again under their IDs, in one transaction. */
@@ -190,6 +198,7 @@ public class EventDatabase extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Marks upcoming events that have ended by the given time as completed. */
@@ -200,21 +209,43 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindString(2, EventStatus.UPCOMING.name());
             statement.bindString(3,
                     now.toLocalDate() + " " + EventTimes.format(now.toLocalTime()));
-            statement.executeUpdateDelete();
+            // Runs each time the list shows, so it syncs only when an event changed.
+            if (statement.executeUpdateDelete() > 0) {
+                CloudSync.syncChanges(context);
+            }
         }
     }
 
     /** Returns every saved event in start order. */
     public List<Event> getAllEvents() {
-        return getEvents(null);
+        return getEvents(new EventFilter());
     }
 
-    /** Returns the saved events with this status, or all of them if it is null, in start order. */
-    public List<Event> getEvents(@Nullable EventStatus status) {
+    /** Returns the saved events the filter keeps, in start order. */
+    public List<Event> getEvents(EventFilter filter) {
+        List<String> conditions = new ArrayList<>();
+        List<String> args = new ArrayList<>();
+        if (!filter.getText().isEmpty()) {
+            addWordStart(conditions, args, filter.getText(), "Name", "Description");
+        }
+        if (filter.getDate() != null) {
+            conditions.add("Date = ?");
+            args.add(filter.getDate().toString());
+        }
+        if (filter.getOrganizer() != null) {
+            conditions.add("Organizer = ? COLLATE NOCASE");
+            args.add(filter.getOrganizer());
+        }
+        if (filter.getStatus() != null) {
+            conditions.add("Status = ?");
+            args.add(filter.getStatus().name());
+        }
+        // Only these fixed conditions are joined into the query; the values are bound to it.
+        String where = conditions.isEmpty()
+                ? "" : "WHERE " + String.join(" AND ", conditions) + " ";
         List<Event> events = new ArrayList<>();
-        try (Cursor cursor = status == null
-                ? getReadableDatabase().rawQuery(SELECT_ALL, null)
-                : getReadableDatabase().rawQuery(SELECT_BY_STATUS, new String[] {status.name()})) {
+        try (Cursor cursor = getReadableDatabase()
+                .rawQuery(SELECT + where + START_ORDER, args.toArray(new String[0]))) {
             while (cursor.moveToNext()) {
                 events.add(readEvent(cursor));
             }
@@ -235,7 +266,9 @@ public class EventDatabase extends SQLiteOpenHelper {
     public long insertSession(Session session) {
         try (SQLiteStatement statement = getWritableDatabase().compileStatement(INSERT_SESSION)) {
             bindSessionDetails(statement, session);
-            return statement.executeInsert();
+            long id = statement.executeInsert();
+            CloudSync.syncChanges(context);
+            return id;
         }
     }
 
@@ -246,6 +279,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(9, session.getId());
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Deletes the session with this ID. */
@@ -254,6 +288,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(1, id);
             statement.executeUpdateDelete();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Saves a deleted session again under its ID, to undo a delete. */
@@ -264,6 +299,7 @@ public class EventDatabase extends SQLiteOpenHelper {
             statement.bindLong(9, session.getId());
             statement.executeInsert();
         }
+        CloudSync.syncChanges(context);
     }
 
     /** Returns the saved session with this ID, or null if there is none. */
@@ -277,9 +313,25 @@ public class EventDatabase extends SQLiteOpenHelper {
 
     /** Returns the sessions of an event in the order they take place. */
     public List<Session> getSessions(Event event) {
+        return getSessions(event, "");
+    }
+
+    /** Returns an event's sessions where a word in the name or description starts with text. */
+    public List<Session> getSessions(Event event, String text) {
+        List<String> conditions = new ArrayList<>();
+        List<String> args = new ArrayList<>();
+        conditions.add("EventID = ?");
+        args.add(String.valueOf(event.getId()));
+        if (!text.isEmpty()) {
+            addWordStart(conditions, args, text, "Name", "Description");
+        }
+        // Bound last, as the order comes after the conditions.
+        args.add(EventTimes.format(event.getStartTime()));
+        String query = SELECT_SESSION + "WHERE " + String.join(" AND ", conditions) + " "
+                + SESSION_ORDER;
         List<Session> sessions = new ArrayList<>();
-        try (Cursor cursor = getReadableDatabase().rawQuery(SELECT_SESSIONS, new String[] {
-                String.valueOf(event.getId()), EventTimes.format(event.getStartTime())})) {
+        try (Cursor cursor = getReadableDatabase()
+                .rawQuery(query, args.toArray(new String[0]))) {
             while (cursor.moveToNext()) {
                 sessions.add(readSession(cursor));
             }
@@ -305,6 +357,31 @@ public class EventDatabase extends SQLiteOpenHelper {
             }
         }
         return counts;
+    }
+
+    /** Keeps the rows where a word in one of the columns starts with the text, in any case. */
+    private static void addWordStart(List<String> conditions, List<String> args, String text,
+            String... columns) {
+        // Typed wildcards are escaped, so % and _ match only themselves.
+        String start = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        List<String> matches = new ArrayList<>();
+        for (String column : columns) {
+            matches.add(column + " LIKE ? ESCAPE '\\' OR " + column + " LIKE ? ESCAPE '\\'");
+            args.add(start + "%");
+            args.add("% " + start + "%");
+        }
+        conditions.add("(" + String.join(" OR ", matches) + ")");
+    }
+
+    /** Returns the organizers of the saved events, for the organizer filter. */
+    public List<String> getOrganizers() {
+        List<String> organizers = new ArrayList<>();
+        try (Cursor cursor = getReadableDatabase().rawQuery(SELECT_ORGANIZERS, null)) {
+            while (cursor.moveToNext()) {
+                organizers.add(cursor.getString(0));
+            }
+        }
+        return organizers;
     }
 
     /** Returns how many events are saved. */

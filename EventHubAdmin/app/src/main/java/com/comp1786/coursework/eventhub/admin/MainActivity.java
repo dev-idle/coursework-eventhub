@@ -2,6 +2,7 @@ package com.comp1786.coursework.eventhub.admin;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,9 +16,11 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.ListPopupWindow;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -26,18 +29,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Lists the saved events as cards, with a status filter and a way to delete several at once.
+ * Lists the saved events as cards, with filters and a way to delete several at once.
  */
 public class MainActivity extends AppCompatActivity implements EventAdapter.OnEventClickListener {
 
@@ -48,7 +53,9 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     private MaterialToolbar toolbar;
     private TextView eventCount;
     private View filterBar;
-    private ChipGroup filterGroup;
+    private Chip dateFilter;
+    private Chip statusFilter;
+    private Chip organizerFilter;
     private RecyclerView eventList;
     private View emptyView;
     private TextView emptyTitle;
@@ -57,11 +64,13 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
 
     private EventDatabase database;
     private EventAdapter adapter;
-    // The status the list shows, or null for every event.
-    @Nullable
-    private EventStatus filter;
+    // Kept across rotation but not saved, so a new launch shows every saved event.
+    private EventFilter filter;
     private AlertDialog deleteDialog;
-    private ListPopupWindow moreMenu;
+    // The More or filter menu that is open, closed along with the screen.
+    private ListPopupWindow openMenu;
+    @Nullable
+    private MenuItem searchItem;
     // Set while another screen opens, so a quick second tap does not open it twice.
     private boolean opening;
 
@@ -85,6 +94,11 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!SignInActivity.isSignedIn()) {
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        }
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -103,6 +117,10 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         toolbar.setNavigationOnClickListener(v -> stopSelection());
         getOnBackPressedDispatcher().addCallback(this, selectionCallback);
         database = new EventDatabase(this);
+        if (savedInstanceState == null) {
+            // Sends any change that had not reached the cloud when the app last closed.
+            CloudSync.syncChanges(this);
+        }
         adapter = new EventAdapter(this);
         GridLayoutManager layoutManager = new GridLayoutManager(this,
                 getResources().getInteger(R.integer.event_list_columns));
@@ -115,11 +133,10 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         });
         eventList.setLayoutManager(layoutManager);
         eventList.setAdapter(adapter);
-        // Kept across rotation but not saved, so a new launch shows every saved event.
-        String savedFilter = savedInstanceState == null
-                ? null : savedInstanceState.getString(STATE_FILTER);
-        filter = savedFilter == null ? null : EventStatus.valueOf(savedFilter);
-        buildFilterChips();
+        EventFilter savedFilter = savedInstanceState == null
+                ? null : savedInstanceState.getSerializable(STATE_FILTER, EventFilter.class);
+        filter = savedFilter == null ? new EventFilter() : savedFilter;
+        setUpFilters();
 
         // Shrinks to the icon while scrolling down, so it covers less of the list.
         eventList.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -129,6 +146,14 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                     addButton.shrink();
                 } else if (dy < 0) {
                     addButton.extend();
+                }
+            }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                // Dragging the list puts the keyboard away, keeping the search and its results.
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING && searchItem != null) {
+                    searchItem.getActionView().clearFocus();
                 }
             }
         });
@@ -146,9 +171,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (filter != null) {
-            outState.putString(STATE_FILTER, filter.name());
-        }
+        outState.putSerializable(STATE_FILTER, filter);
         if (adapter.isSelecting()) {
             outState.putLongArray(STATE_SELECTED_IDS, adapter.getSelectedIds());
         }
@@ -175,31 +198,35 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         if (deleteDialog != null) {
             deleteDialog.dismiss();
         }
-        if (moreMenu != null) {
-            moreMenu.dismiss();
+        if (openMenu != null) {
+            openMenu.dismiss();
         }
-        database.close();
+        // Not opened when the screen closes at once to ask for sign-in.
+        if (database != null) {
+            database.close();
+        }
         super.onDestroy();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(
-                adapter.isSelecting() ? R.menu.menu_selection : R.menu.menu_more, menu);
-        MenuItem more = menu.findItem(R.id.action_more);
-        if (more != null) {
-            // A button set as an action view does not call onOptionsItemSelected by itself.
-            more.getActionView().setOnClickListener(v -> onOptionsItemSelected(more));
+                adapter.isSelecting() ? R.menu.menu_selection : R.menu.menu_main, menu);
+        searchItem = menu.findItem(R.id.action_search);
+        MenuItem moreItem = menu.findItem(R.id.action_more);
+        if (searchItem != null) {
+            setUpSearch(searchItem);
         }
+        if (moreItem != null) {
+            // A button set as an action view does not call onOptionsItemSelected by itself.
+            moreItem.getActionView().setOnClickListener(v -> onOptionsItemSelected(moreItem));
+        }
+        showAppBarButtons();
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem more = menu.findItem(R.id.action_more);
-        if (more != null) {
-            more.setVisible(adapter.getItemCount() > 0);
-        }
         MenuItem selectAll = menu.findItem(R.id.action_select_all);
         if (selectAll != null) {
             // Like the check box over a table: empty, partly filled, or checked once all are.
@@ -221,8 +248,7 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_more) {
-            moreMenu = MoreMenu.show(this, item.getActionView(), new MoreMenu.Item(
-                    R.layout.item_menu_select, R.string.menu_select_events, this::startSelection));
+            showMoreMenu(item.getActionView());
             return true;
         } else if (id == R.id.action_select_all) {
             if (adapter.isAllSelected()) {
@@ -276,7 +302,9 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         toolbar = findViewById(R.id.toolbar);
         eventCount = findViewById(R.id.event_count);
         filterBar = findViewById(R.id.filter_bar);
-        filterGroup = findViewById(R.id.filter_group);
+        dateFilter = findViewById(R.id.date_filter);
+        statusFilter = findViewById(R.id.status_filter);
+        organizerFilter = findViewById(R.id.organizer_filter);
         eventList = findViewById(R.id.event_list);
         emptyView = findViewById(R.id.empty_view);
         emptyTitle = findViewById(R.id.empty_title);
@@ -284,26 +312,184 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         addButton = findViewById(R.id.add_button);
     }
 
-    /** Adds a chip per status with the current filter chosen; none chosen shows every event. */
-    private void buildFilterChips() {
-        for (EventStatus status : EventStatus.values()) {
-            addFilterChip(status);
+    /** Shows search with the filters, while events are saved. */
+    private void showAppBarButtons() {
+        if (searchItem != null) {
+            searchItem.setVisible(filterBar.getVisibility() == View.VISIBLE);
         }
-        filterGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            filter = checkedIds.isEmpty()
-                    ? null : (EventStatus) group.findViewById(checkedIds.get(0)).getTag();
-            showEvents();
+    }
+
+    /** Opens More, which offers selecting only while cards are shown. */
+    private void showMoreMenu(View anchor) {
+        List<MoreMenu.Item> items = new ArrayList<>();
+        if (adapter.getItemCount() > 0) {
+            items.add(new MoreMenu.Item(R.layout.item_menu_select, R.string.menu_select_events,
+                    this::startSelection));
+        }
+        items.add(new MoreMenu.Item(R.layout.item_menu_upload, R.string.menu_upload,
+                this::uploadEvents));
+        items.add(new MoreMenu.Item(R.layout.item_menu_sync, R.string.menu_sync,
+                CloudSync.isAutoSync(this), on -> CloudSync.setAutoSync(this, on)));
+        items.add(new MoreMenu.Item(R.layout.item_menu_sign_out, R.string.menu_sign_out,
+                this::signOut));
+        openMenu = MoreMenu.show(this, anchor, items.toArray(new MoreMenu.Item[0]));
+    }
+
+    /** Signs the admin out and returns to the sign-in screen; the saved events stay. */
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+        startActivity(new Intent(this, SignInActivity.class));
+        finish();
+    }
+
+    /** Uploads every saved event at once, after checking that the device is online. */
+    private void uploadEvents() {
+        if (!CloudSync.isOnline(this)) {
+            IconSnackbar.make(eventList, getString(R.string.message_offline),
+                    R.drawable.ic_cloud_off, Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        CloudSync.upload(this, new CloudSync.UploadListener() {
+            @Override
+            public void onUploaded(int count) {
+                String message = getResources().getQuantityString(
+                        R.plurals.message_events_uploaded, count, count);
+                IconSnackbar.make(eventList, message, R.drawable.ic_cloud_done,
+                        Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailed() {
+                IconSnackbar.make(eventList, getString(R.string.message_upload_failed),
+                        R.drawable.ic_cloud_off, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.button_retry, v -> uploadEvents())
+                        .show();
+            }
         });
     }
 
-    private void addFilterChip(EventStatus status) {
-        Chip chip = (Chip) getLayoutInflater()
-                .inflate(R.layout.item_filter_chip, filterGroup, false);
-        chip.setId(View.generateViewId());
-        chip.setText(status.getLabelRes());
-        chip.setTag(status);
-        chip.setChecked(status == filter);
-        filterGroup.addView(chip);
+    /** Searches as the user types, and reopens the search the list is still narrowed to. */
+    private void setUpSearch(MenuItem item) {
+        SearchView searchView = (SearchView) item.getActionView();
+        searchView.setQueryHint(getString(R.string.hint_search_events));
+        searchView.setMaxWidth(Integer.MAX_VALUE);
+        // After rotation, or once selecting ends, the field shows the text searched for.
+        if (!filter.getText().isEmpty()) {
+            item.expandActionView();
+            searchView.setQuery(filter.getText(), false);
+            searchView.clearFocus();
+        }
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchView.clearFocus();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // Called with no text as the field closes, which it also does when selecting
+                // starts, and selecting keeps the list as it is.
+                if (!adapter.isSelecting()) {
+                    filter.setText(newText);
+                    showEvents();
+                }
+                return true;
+            }
+        });
+    }
+
+    /** Opens each filter's choices, and clears a chosen one from its close button. */
+    private void setUpFilters() {
+        setUpFilter(dateFilter, this::showDatePicker, () -> filter.setDate(null));
+        setUpFilter(statusFilter, this::showStatusMenu, () -> filter.setStatus(null));
+        setUpFilter(organizerFilter, this::showOrganizerMenu, () -> filter.setOrganizer(null));
+        getSupportFragmentManager().setFragmentResultListener(DatePickerFragment.REQUEST_KEY,
+                this, (key, result) -> {
+                    filter.setDate(result.getSerializable(
+                            DatePickerFragment.RESULT_DATE, LocalDate.class));
+                    showEvents();
+                });
+    }
+
+    private void setUpFilter(Chip chip, Runnable showChoices, Runnable clear) {
+        chip.setOnClickListener(v -> {
+            // A tap also checks or unchecks the chip, which only shows whether one is chosen.
+            showFilters();
+            showChoices.run();
+        });
+        // The arrow opens the choices too, and a chosen filter's close button clears it.
+        chip.setOnCloseIconClickListener(v -> {
+            if (chip.isChecked()) {
+                clear.run();
+                showEvents();
+            } else {
+                showChoices.run();
+            }
+        });
+    }
+
+    private void showDatePicker() {
+        // A quick second tap would otherwise open a second picker.
+        if (getSupportFragmentManager().findFragmentByTag(DatePickerFragment.REQUEST_KEY) != null) {
+            return;
+        }
+        LocalDate date = filter.getDate();
+        DatePickerFragment.newInstance(date != null ? date : LocalDate.now())
+                .show(getSupportFragmentManager(), DatePickerFragment.REQUEST_KEY);
+    }
+
+    /** Lists the statuses under their chip, with the chosen one ticked. */
+    private void showStatusMenu() {
+        EventStatus[] statuses = EventStatus.values();
+        MoreMenu.Item[] items = new MoreMenu.Item[statuses.length];
+        for (int i = 0; i < statuses.length; i++) {
+            EventStatus status = statuses[i];
+            items[i] = new MoreMenu.Item(R.layout.item_menu_choice,
+                    getString(status.getLabelRes()), status == filter.getStatus(), () -> {
+                        filter.setStatus(status);
+                        showEvents();
+                    });
+        }
+        openMenu = MoreMenu.show(this, statusFilter, Gravity.START, items);
+    }
+
+    /** Lists the organizers of the saved events, so one is chosen rather than typed. */
+    private void showOrganizerMenu() {
+        List<String> organizers = database.getOrganizers();
+        MoreMenu.Item[] items = new MoreMenu.Item[organizers.size()];
+        for (int i = 0; i < items.length; i++) {
+            String organizer = organizers.get(i);
+            items[i] = new MoreMenu.Item(R.layout.item_menu_choice, organizer,
+                    organizer.equals(filter.getOrganizer()), () -> {
+                        filter.setOrganizer(organizer);
+                        showEvents();
+                    });
+        }
+        openMenu = MoreMenu.show(this, organizerFilter, Gravity.START, items);
+    }
+
+    /** Shows each filter's label, or its chosen value with a button that clears it. */
+    private void showFilters() {
+        LocalDate date = filter.getDate();
+        EventStatus status = filter.getStatus();
+        showFilter(dateFilter, R.string.filter_date,
+                date == null ? null : EventDates.format(date), R.string.description_clear_date);
+        showFilter(statusFilter, R.string.filter_status,
+                status == null ? null : getString(status.getLabelRes()),
+                R.string.description_clear_status);
+        showFilter(organizerFilter, R.string.filter_organizer, filter.getOrganizer(),
+                R.string.description_clear_organizer);
+    }
+
+    private void showFilter(Chip chip, @StringRes int labelRes, @Nullable String value,
+            @StringRes int clearRes) {
+        boolean chosen = value != null;
+        chip.setText(chosen ? value : getString(labelRes));
+        // Checked only to look chosen, as the chip itself opens the choices.
+        chip.setChecked(chosen);
+        chip.setCloseIconResource(chosen ? R.drawable.ic_close : R.drawable.ic_arrow_drop_down);
+        chip.setCloseIconContentDescription(chosen ? getString(clearRes) : null);
     }
 
     private void openAddEvent() {
@@ -334,10 +520,14 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                 R.drawable.ic_check_circle, Snackbar.LENGTH_SHORT).show();
     }
 
-    /** Scrolls to an event, first showing every event if the filter hides it. */
+    /** Scrolls to an event, first showing every event if the filters hide it. */
     private void scrollToEvent(long id) {
-        if (adapter.positionOf(id) == RecyclerView.NO_POSITION && filter != null) {
-            filterGroup.clearCheck();
+        if (adapter.positionOf(id) == RecyclerView.NO_POSITION && !filter.isEmpty()) {
+            filter = new EventFilter();
+            if (searchItem != null) {
+                searchItem.collapseActionView();
+            }
+            showEvents();
         }
         eventList.scrollToPosition(adapter.positionOf(id));
     }
@@ -403,11 +593,11 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
         invalidateOptionsMenu();
     }
 
-    /** Locks the filter chips while selecting, so the events to select stay the same. */
+    /** Locks the filters while selecting, so the events to select stay the same. */
     private void setFiltersEnabled(boolean enabled) {
-        for (int i = 0; i < filterGroup.getChildCount(); i++) {
-            filterGroup.getChildAt(i).setEnabled(enabled);
-        }
+        dateFilter.setEnabled(enabled);
+        statusFilter.setEnabled(enabled);
+        organizerFilter.setEnabled(enabled);
     }
 
     /** Asks before deleting the selected events, which Undo can then bring back. */
@@ -433,39 +623,43 @@ public class MainActivity extends AppCompatActivity implements EventAdapter.OnEv
                 .show();
     }
 
-    /** Shows the events the filter keeps and their number, or the empty state if there are none. */
+    /** Shows the events the filters keep and their number, or the empty state if there are none. */
     private void showEvents() {
         LocalDateTime now = LocalDateTime.now();
         database.completeEndedEvents(now);
         boolean nothingSaved = database.countEvents() == 0;
-        if (nothingSaved && filter != null) {
-            // The chips hide while nothing is saved, so the list goes back to every event.
-            filterGroup.clearCheck();
-            return;
+        if (nothingSaved) {
+            // The filters hide while nothing is saved, so the list goes back to every event.
+            filter = new EventFilter();
+            if (searchItem != null) {
+                searchItem.collapseActionView();
+            }
         }
+        showFilters();
         List<Event> events = database.getEvents(filter);
         // The same time, so every card shown as ended is also completed.
         adapter.setEvents(events, database.getSessionCounts(), now);
         filterBar.setVisibility(nothingSaved ? View.GONE : View.VISIBLE);
         boolean empty = events.isEmpty();
         emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
-        emptyTitle.setText(filter == null ? R.string.empty_title : filter.getEmptyRes());
-        emptyMessage.setText(
-                filter == null ? R.string.empty_message : R.string.empty_filtered_message);
+        emptyTitle.setText(filter.isEmpty() ? R.string.empty_title : R.string.empty_filtered_title);
+        emptyMessage.setText(filter.isEmpty() ? R.string.empty_message
+                : filter.getText().isEmpty() ? R.string.empty_filtered_message
+                : R.string.empty_search_message);
         if (empty) {
             // The button may still be shrunk from scrolling, and the empty state needs its label.
             addButton.extend();
         }
-        eventCount.setVisibility(empty ? View.GONE : View.VISIBLE);
+        // Kept while the filters hide every event, so they stay where they were.
+        eventCount.setVisibility(nothingSaved ? View.GONE : View.VISIBLE);
         eventCount.setText(getResources().getQuantityString(
-                filter == null ? R.plurals.event_count : filter.getCountRes(),
-                events.size(), events.size()));
+                R.plurals.event_count, events.size(), events.size()));
         if (adapter.isSelecting()) {
             // Events no longer shown were deselected, so the number selected may have changed.
             showSelection();
         } else {
-            // The More options button shows only while there are cards to select.
-            invalidateOptionsMenu();
+            // Set in place, as rebuilding the menu would close the search field.
+            showAppBarButtons();
         }
     }
 }

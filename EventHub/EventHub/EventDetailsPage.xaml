@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EventHub.EventDetailsPage"
+             Title="Event details"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="64,*">
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="4,0">
+            <Grid Style="{StaticResource IconButton}" SemanticProperties.Description="Back">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconBack}" Style="{StaticResource BarIcon}" />
+            </Grid>
+            <Label Grid.Column="1"
+                   Text="Event details"
+                   Style="{StaticResource BarTitle}"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <!-- Adds the event to the favorites, or takes it off -->
+            <Grid x:Name="favoriteButton" Grid.Column="2" Style="{StaticResource IconButton}">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFavoriteTapped" />
+                </Grid.GestureRecognizers>
+                <Path x:Name="favoriteIcon" Style="{StaticResource BarIcon}" />
+            </Grid>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,8,16,16" Spacing="8">
+                <!-- What the event is, then when, where and who, as on the admin app's details -->
+                <Border Style="{StaticResource Card}" Padding="0,16,0,8">
+                    <VerticalStackLayout>
+                        <Label x:Name="nameLabel" Style="{StaticResource DetailName}" />
+                        <HorizontalStackLayout Spacing="8" Padding="16,8,16,16">
+                            <Border x:Name="typeLabel" Style="{StaticResource TypeLabel}">
+                                <Label x:Name="typeText" Style="{StaticResource LabelText}" />
+                            </Border>
+                            <Ellipse x:Name="liveDot" Style="{StaticResource LiveDot}" />
+                            <Label x:Name="statusLabel" Style="{StaticResource LabelText}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <BoxView Style="{StaticResource Divider}" />
+
+                        <Grid Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconEvent}" Style="{StaticResource Icon}" />
+                            <Label x:Name="dateLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                        </Grid>
+                        <Grid x:Name="timeRow" Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconSchedule}" Style="{StaticResource Icon}" />
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <HorizontalStackLayout>
+                                    <Label x:Name="timeLabel" Style="{StaticResource DetailValue}" />
+                                    <Label x:Name="nextDayLabel" Text="+1" Style="{StaticResource NextDay}" />
+                                </HorizontalStackLayout>
+                                <Label x:Name="lengthLabel" Style="{StaticResource DetailSubtext}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Grid Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconPlace}" Style="{StaticResource Icon}" />
+                            <Label x:Name="locationLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                        </Grid>
+                        <Grid Style="{StaticResource DetailRow}">
+                            <Path Data="{StaticResource IconPerson}" Style="{StaticResource Icon}" />
+                            <Label x:Name="organizerLabel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                        </Grid>
+                        <!-- The contact details are optional, so their rows hide when empty, and open the email app or the dialer -->
+                        <Grid x:Name="emailRow" Style="{StaticResource DetailRow}" SemanticProperties.Hint="Opens your email app">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnEmailTapped" />
+                            </Grid.GestureRecognizers>
+                            <Path Data="{StaticResource IconEmail}" Style="{StaticResource Icon}" />
+                            <Label x:Name="emailLabel" Grid.Column="1" Style="{StaticResource DetailLink}" />
+                        </Grid>
+                        <Grid x:Name="phoneRow" Style="{StaticResource DetailRow}" SemanticProperties.Hint="Opens the phone dialer">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPhoneTapped" />
+                            </Grid.GestureRecognizers>
+                            <Path Data="{StaticResource IconPhone}" Style="{StaticResource Icon}" />
+                            <Label x:Name="phoneLabel" Grid.Column="1" Style="{StaticResource DetailLink}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- How many sessions there are and the next to start, opening the sessions -->
+                <Border Style="{StaticResource Card}" Padding="0,8">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSessionsTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Style="{StaticResource DetailRow}">
+                        <Path Data="{StaticResource IconList}" Style="{StaticResource Icon}" />
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label x:Name="sessionCountLabel" Style="{StaticResource DetailValue}" />
+                            <Label x:Name="nextSessionLabel" Style="{StaticResource DetailSubtext}" />
+                        </VerticalStackLayout>
+                        <Path x:Name="sessionsChevron"
+                              Grid.Column="2"
+                              Data="{StaticResource IconChevronRight}"
+                              Style="{StaticResource Icon}" />
+                    </Grid>
+                </Border>
+
+                <Border x:Name="descriptionCard" Style="{StaticResource Card}" Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Description" Style="{StaticResource CardTitle}" />
+                        <Label x:Name="descriptionLabel" Style="{StaticResource CardText}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

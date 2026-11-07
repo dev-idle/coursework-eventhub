@@ -73,6 +73,15 @@
         <item name="materialThemeOverlay">@style/ThemeOverlay.EventHubAdmin.FilterChip</item>
     </style>
 
+    <!-- A filter that opens its choices: an arrow until one is chosen, then a clear button. -->
+    <style name="Widget.EventHubAdmin.DropdownChip" parent="Widget.EventHubAdmin.FilterChip">
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxWidth">@dimen/filter_chip_max_width</item>
+        <item name="android:saveEnabled">false</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">true</item>
+    </style>
+
     <style name="ThemeOverlay.EventHubAdmin.FilterChip" parent="ThemeOverlay.Material3.Chip">
         <item name="colorSecondaryContainer">?attr/colorPrimaryContainer</item>
         <item name="colorOnSecondaryContainer">?attr/colorOnPrimaryContainer</item>
@@ -82,6 +91,13 @@
     <style name="ThemeOverlay.EventHubAdmin.Picker" parent="ThemeOverlay.Material3.Dialog">
         <item name="android:colorAccent">?attr/colorPrimary</item>
         <item name="android:colorControlActivated">?attr/colorPrimary</item>
+    </style>
+
+    <!-- The search field sits in the app bar like its title: no underline, and a plain hint
+         with the cursor just before it, as the search button already shows the icon. -->
+    <style name="Widget.EventHubAdmin.SearchView" parent="Widget.AppCompat.SearchView">
+        <item name="queryBackground">@null</item>
+        <item name="searchHintIcon">@null</item>
     </style>
 
     <!-- Opens below its button and ends under its dots, on the 16dp keyline. -->
@@ -101,6 +117,31 @@
         <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="drawableTint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- One of the choices of a filter, with a tick at its end once chosen -->
+    <style name="Widget.EventHubAdmin.MenuChoice" parent="Widget.EventHubAdmin.MenuItem">
+        <item name="android:checkMarkTint">@color/menu_check</item>
+        <item name="android:paddingStart">@dimen/screen_padding</item>
+        <item name="android:paddingEnd">@dimen/screen_padding</item>
+    </style>
+
+    <!-- A menu item with a switch at its end, 44 by 26dp to sit with the text and icons -->
+    <style name="Widget.EventHubAdmin.MenuSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="android:background">@null</item>
+        <item name="android:drawablePadding">@dimen/space_medium</item>
+        <item name="android:drawableTint">?attr/colorOnSurfaceVariant</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:paddingStart">@dimen/space_medium</item>
+        <item name="android:paddingEnd">@dimen/space_medium</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:thumb">@drawable/bg_switch_thumb</item>
+        <item name="switchPadding">@dimen/menu_control_padding</item>
+        <item name="track">@drawable/bg_switch_track</item>
+        <item name="trackDecoration">@drawable/bg_switch_track_outline</item>
     </style>
 
     <!-- Each field keeps a line for its message, so an error does not move the form. -->

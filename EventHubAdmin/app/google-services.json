@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "818216802753",
+    "firebase_url": "https://comp1786-eventhub-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "comp1786-eventhub",
+    "storage_bucket": "comp1786-eventhub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:818216802753:android:378a3f46349532fde37740",
+        "android_client_info": {
+          "package_name": "com.comp1786.coursework.eventhub.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzKArMBwTohQIV9K7wTsyId1KTmXWTPtw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

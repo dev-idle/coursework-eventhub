@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The menu row takes the tap, so the switch only shows the state. -->
+<com.google.android.material.materialswitch.MaterialSwitch xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.EventHubAdmin.MenuSwitch"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeightSmall"
+    android:clickable="false"
+    android:drawableStart="@drawable/ic_sync"
+    android:focusable="false" />

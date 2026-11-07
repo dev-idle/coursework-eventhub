@@ -1,16 +1,58 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<ResourceDictionary 
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <!-- The admin app's Material 3 scheme, from seed color #1E6FB8. A key ending in Dark is
+         the color for the dark theme. -->
+    <Color x:Key="Primary">#455E91</Color>
+    <Color x:Key="PrimaryDark">#AEC6FF</Color>
+    <Color x:Key="OnPrimary">#FFFFFF</Color>
+    <Color x:Key="OnPrimaryDark">#112F60</Color>
+    <Color x:Key="PrimaryContainer">#D8E2FF</Color>
+    <Color x:Key="PrimaryContainerDark">#2C4678</Color>
+    <Color x:Key="OnPrimaryContainer">#2C4678</Color>
+    <Color x:Key="OnPrimaryContainerDark">#D8E2FF</Color>
+    <Color x:Key="Error">#A43B33</Color>
+    <Color x:Key="ErrorDark">#FFB4AB</Color>
+    <Color x:Key="OnSurface">#1A1B20</Color>
+    <Color x:Key="OnSurfaceDark">#E2E2E9</Color>
+    <Color x:Key="OnSurfaceVariant">#44474F</Color>
+    <Color x:Key="OnSurfaceVariantDark">#C5C6D0</Color>
+    <Color x:Key="Outline">#75777F</Color>
+    <Color x:Key="OutlineDark">#8E9099</Color>
+    <Color x:Key="OutlineVariant">#C5C6D0</Color>
+    <Color x:Key="OutlineVariantDark">#44474F</Color>
+    <Color x:Key="SurfaceContainerHighest">#E2E2E9</Color>
+    <Color x:Key="SurfaceContainerHighestDark">#33353A</Color>
+
+    <!-- The screen behind the cards, the cards and the menus, as in the admin app -->
+    <Color x:Key="Background">#EEEDF4</Color>
+    <Color x:Key="BackgroundDark">#111318</Color>
+    <Color x:Key="Card">#FFFFFF</Color>
+    <Color x:Key="CardDark">#282A2F</Color>
+    <Color x:Key="Menu">#EEEDF4</Color>
+    <Color x:Key="MenuDark">#1E1F25</Color>
+
+    <!-- Event type labels -->
+    <Color x:Key="TypeConference">#DEECFF</Color>
+    <Color x:Key="TypeConferenceDark">#1F4565</Color>
+    <Color x:Key="TypeWorkshop">#D4F3D3</Color>
+    <Color x:Key="TypeWorkshopDark">#224A2A</Color>
+    <Color x:Key="TypeSeminar">#F4E6FF</Color>
+    <Color x:Key="TypeSeminarDark">#4C3A65</Color>
+    <Color x:Key="TypeSocial">#FFE6D7</Color>
+    <Color x:Key="TypeSocialDark">#623812</Color>
+    <Color x:Key="TypeOther">#EBEBEE</Color>
+    <Color x:Key="TypeOtherDark">#414245</Color>
+
+    <!-- Template colors, still used by Styles.xaml -->
+    <Color x:Key="PrimaryDarkText">#112F60</Color>
+    <Color x:Key="Secondary">#DBE2F9</Color>
+    <Color x:Key="SecondaryDarkText">#C1C6DD</Color>
+    <Color x:Key="Tertiary">#2C4678</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>

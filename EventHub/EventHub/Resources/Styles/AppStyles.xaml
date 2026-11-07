@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- The app's own styles, sized as in the admin app. sans-serif-medium is Roboto Medium on Android. -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Style x:Key="PageTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <!-- An icon that is tapped, with a touch area of 48 by 48 -->
+    <Style x:Key="IconButton" TargetType="Grid">
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="WidthRequest" Value="48" />
+    </Style>
+
+    <!-- The bar at the top of the other pages: a back button and the page's title -->
+    <Style x:Key="BarIcon" TargetType="Path" BasedOn="{StaticResource Icon}">
+        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+    </Style>
+
+    <Style x:Key="BarTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="Margin" Value="4,0,0,0" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="BarSubtitle" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <Style x:Key="SearchField" TargetType="Entry">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+        <Setter Property="ReturnType" Value="Search" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="Count" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <Style x:Key="MonthHeading" TargetType="Label">
+        <Setter Property="CharacterSpacing" Value="1.4" />
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="20,16,20,4" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <!-- Filter chips, whose colors are set in code as a filter is chosen or cleared -->
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="HeightRequest" Value="32" />
+        <Setter Property="Padding" Value="12,0,4,0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        <Setter Property="StrokeThickness" Value="1" />
+    </Style>
+
+    <Style x:Key="ChipText" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="ChipButton" TargetType="Grid">
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="VerticalOptions" Value="Fill" />
+    </Style>
+
+    <!-- The star in a card's corner, with a touch area of 48 by 48 -->
+    <Style x:Key="CardStarButton" TargetType="Grid">
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="Start" />
+        <Setter Property="WidthRequest" Value="48" />
+    </Style>
+
+    <!-- Marks a favorite event -->
+    <Style x:Key="FavoriteStar" TargetType="Path" BasedOn="{StaticResource Icon}">
+        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <!-- A line of news above the list, such as being offline -->
+    <Style x:Key="Notice" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceContainerHighest}, Dark={StaticResource SurfaceContainerHighestDark}}" />
+        <Setter Property="Margin" Value="16,8,16,0" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+
+    <!-- Menus, with the color and shadow of the admin app's -->
+    <Style x:Key="Menu" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Menu}, Dark={StaticResource MenuDark}}" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="Shadow">
+            <Shadow Brush="Black" Offset="0,2" Opacity="0.25" Radius="8" />
+        </Setter>
+        <Setter Property="StrokeShape" Value="RoundRectangle 4" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="VerticalOptions" Value="Start" />
+    </Style>
+
+    <!-- Event cards -->
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Card}, Dark={StaticResource CardDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+
+    <!-- Cut into the card at both ends of the line between the date and the details -->
+    <Style x:Key="CardNotch" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark}}" />
+        <Setter Property="HeightRequest" Value="16" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="WidthRequest" Value="16" />
+    </Style>
+
+    <Style x:Key="CardName" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <Style x:Key="TypeLabel" TargetType="Border">
+        <Setter Property="Padding" Value="8,2" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+
+    <!-- Session types are always gray, as in the admin app -->
+    <Style x:Key="SessionTypeLabel" TargetType="Border" BasedOn="{StaticResource TypeLabel}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TypeOther}, Dark={StaticResource TypeOtherDark}}" />
+    </Style>
+
+    <Style x:Key="LabelText" TargetType="Label">
+        <Setter Property="CharacterSpacing" Value="0.5" />
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style x:Key="CardTime" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <!-- The dashed line between a card's date or times and its details -->
+    <Style x:Key="CardDivider" TargetType="Rectangle">
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineVariant}, Dark={StaticResource OutlineVariantDark}}" />
+        <Setter Property="StrokeDashArray" Value="4,4" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="WidthRequest" Value="1" />
+    </Style>
+
+    <!-- Before "Happening now" -->
+    <Style x:Key="LiveDot" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="HeightRequest" Value="8" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="WidthRequest" Value="8" />
+    </Style>
+
+    <!-- Raised after a time on the next day -->
+    <Style x:Key="NextDay" TargetType="Label">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Margin" Value="2,0,0,0" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="VerticalOptions" Value="Start" />
+    </Style>
+
+    <Style x:Key="CardLine" TargetType="BoxView">
+        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource OutlineVariant}, Dark={StaticResource OutlineVariantDark}}" />
+        <Setter Property="HeightRequest" Value="1" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="CardDetail" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="SmallText" TargetType="Label">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <!-- Details pages: cards of rows, each with an icon and no label, as in the admin app -->
+    <Style x:Key="DetailName" TargetType="Label">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="Padding" Value="16,0" />
+    </Style>
+
+    <Style x:Key="Divider" TargetType="BoxView">
+        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource SurfaceContainerHighest}, Dark={StaticResource SurfaceContainerHighestDark}}" />
+        <Setter Property="HeightRequest" Value="1" />
+    </Style>
+
+    <Style x:Key="DetailRow" TargetType="Grid">
+        <Setter Property="ColumnDefinitions" Value="Auto,*" />
+        <Setter Property="ColumnSpacing" Value="16" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
+        <Setter Property="Padding" Value="16,8" />
+    </Style>
+
+    <Style x:Key="DetailValue" TargetType="Label">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <!-- A detail that opens another app, colored as a link -->
+    <Style x:Key="DetailLink" TargetType="Label" BasedOn="{StaticResource DetailValue}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <Style x:Key="DetailSubtext" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <Style x:Key="CardTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style x:Key="CardText" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <!-- Empty states, in the middle of the screen -->
+    <Style x:Key="EmptyTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="EmptyMessage" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceVariant}, Dark={StaticResource OnSurfaceVariantDark}}" />
+    </Style>
+
+    <Style x:Key="TonalButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="FontFamily" Value="sans-serif-medium" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="Padding" Value="24,0" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimaryContainer}, Dark={StaticResource OnPrimaryContainerDark}}" />
+    </Style>
+</ResourceDictionary>

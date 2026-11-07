@@ -1,6 +1,5 @@
 package com.comp1786.coursework.eventhub.admin;
 
-import androidx.annotation.PluralsRes;
 import androidx.annotation.StringRes;
 
 /**
@@ -8,39 +7,19 @@ import androidx.annotation.StringRes;
  */
 public enum EventStatus {
 
-    UPCOMING(R.string.status_upcoming, R.plurals.event_count_upcoming, R.string.empty_upcoming),
-    COMPLETED(R.string.status_completed, R.plurals.event_count_completed,
-            R.string.empty_completed),
-    CANCELLED(R.string.status_cancelled, R.plurals.event_count_cancelled,
-            R.string.empty_cancelled);
+    UPCOMING(R.string.status_upcoming),
+    COMPLETED(R.string.status_completed),
+    CANCELLED(R.string.status_cancelled);
 
     @StringRes
     private final int labelRes;
-    @PluralsRes
-    private final int countRes;
-    @StringRes
-    private final int emptyRes;
 
-    EventStatus(@StringRes int labelRes, @PluralsRes int countRes, @StringRes int emptyRes) {
+    EventStatus(@StringRes int labelRes) {
         this.labelRes = labelRes;
-        this.countRes = countRes;
-        this.emptyRes = emptyRes;
     }
 
     @StringRes
     public int getLabelRes() {
         return labelRes;
-    }
-
-    /** Returns the count shown while the list is filtered by this status. */
-    @PluralsRes
-    public int getCountRes() {
-        return countRes;
-    }
-
-    /** Returns the title shown when no event has this status. */
-    @StringRes
-    public int getEmptyRes() {
-        return emptyRes;
     }
 }

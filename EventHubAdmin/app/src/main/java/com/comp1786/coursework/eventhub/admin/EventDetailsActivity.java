@@ -2,12 +2,14 @@ package com.comp1786.coursework.eventhub.admin;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,8 +35,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Shows an event in full: a saved one with a menu to edit or delete it, or an unsaved one to
- * review before it is saved.
+ * Shows an event in full: a saved one with a menu to show its QR code, edit or delete it, or an
+ * unsaved one to review before it is saved.
  */
 public class EventDetailsActivity extends AppCompatActivity {
 
@@ -50,6 +52,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     public static final int RESULT_DELETED = RESULT_FIRST_USER;
 
     private static final String STATE_DELETE_SHOWN = "delete_shown";
+    private static final String STATE_QR_CODE_SHOWN = "qr_code_shown";
 
     private MaterialToolbar toolbar;
     private TextView nameText;
@@ -83,6 +86,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private Event reviewEvent;
     private Event event;
     private AlertDialog deleteDialog;
+    private AlertDialog qrCodeDialog;
     private ListPopupWindow moreMenu;
     // Set while another screen opens, so a quick second tap does not open it twice.
     private boolean opening;
@@ -139,6 +143,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DELETE_SHOWN, deleteDialog != null && deleteDialog.isShowing());
+        outState.putBoolean(STATE_QR_CODE_SHOWN,
+                qrCodeDialog != null && qrCodeDialog.isShowing());
     }
 
     @Override
@@ -147,12 +153,18 @@ public class EventDetailsActivity extends AppCompatActivity {
         if (savedInstanceState.getBoolean(STATE_DELETE_SHOWN)) {
             showDeleteDialog();
         }
+        if (savedInstanceState.getBoolean(STATE_QR_CODE_SHOWN)) {
+            showQrCode();
+        }
     }
 
     @Override
     protected void onDestroy() {
         if (deleteDialog != null) {
             deleteDialog.dismiss();
+        }
+        if (qrCodeDialog != null) {
+            qrCodeDialog.dismiss();
         }
         if (moreMenu != null) {
             moreMenu.dismiss();
@@ -178,6 +190,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_more) {
             moreMenu = MoreMenu.show(this, item.getActionView(),
+                    new MoreMenu.Item(R.layout.item_menu_qr_code, R.string.menu_show_qr_code,
+                            this::showQrCode),
                     new MoreMenu.Item(R.layout.item_menu_edit, R.string.menu_edit,
                             this::openEditEvent),
                     new MoreMenu.Item(R.layout.item_menu_delete, R.string.menu_delete,
@@ -291,6 +305,29 @@ public class EventDetailsActivity extends AppCompatActivity {
                             .putExtra(EXTRA_SESSIONS, sessions.toArray(new Session[0])));
                     finish();
                 })
+                .show();
+    }
+
+    /** Shows the event and its sessions as a QR code, which a phone camera reads as text. */
+    private void showQrCode() {
+        Bitmap qrCode = EventQrCode.encode(
+                EventQrCode.textOf(getResources(), event, database.getSessions(event)),
+                getResources().getDimensionPixelSize(R.dimen.qr_code_size));
+        if (qrCode == null) {
+            IconSnackbar.make(findViewById(R.id.main),
+                    getString(R.string.message_qr_code_too_long),
+                    R.drawable.ic_error_outline, Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        ImageView qrCodeImage = new ImageView(this);
+        qrCodeImage.setImageBitmap(qrCode);
+        qrCodeImage.setContentDescription(getString(R.string.description_qr_code));
+        qrCodeImage.setPadding(0, getResources().getDimensionPixelSize(R.dimen.space_small), 0, 0);
+        // With no message, the dialog shrinks the code to fit, so Close stays in landscape.
+        qrCodeDialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(event.getName())
+                .setView(qrCodeImage)
+                .setPositiveButton(R.string.button_close, null)
                 .show();
     }
 
